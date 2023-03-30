@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flare-forecast.org/FaaSr.schema.json",
+  "title": "FaaSr invocation payload",
+  "description": "Schema for an invocation of FaaSr",
+  "type": "object",
+  "properties": {
+    "FunctionInvoke": {
+      "description": "The name of the R function to be invoked by this action",
+      "type": "string"
+    },
+    "InvocationID": {
+      "description": "The unique ID used throughout all action invocations for this workflow",
+      "type": "string"
+    },
+    "LoggingServer": {
+      "description": "The name of the logging server to use - must match an S3 server defined under DataStores",
+      "type": "string"
+    },
+    "FunctionList": {
+      "description": "A list of one or more functions that describes the workflow",
+      "type": "object",
+      "properties": {
+        # need to figure out how to represent a user-provided key here, e.g. "F1"
+      }
+      # need to figure out how to represent that at least one entry is required
+    },
+    "ComputeServers": {
+      "description": "A list of one or more FaaS compute servers used in the workflow",
+      "type": "object",
+      "properties": {
+        # need to figure out how to represent a user-provided key here, e.g. "ow_A"
+      }
+      # need to figure out how to represent that at least one entry is required
+    },
+    "DataStores": {
+      "description": "A list of one or more S3 data servers used in the workflow",
+      "type": "object",
+      "properties": {
+        # need to figure out how to represent a user-provided key here, e.g. "S3_A"
+      }
+      # need to figure out how to represent that at least one entry is required
+    }
+  },
+  "required": [ "FunctionInvoke", "LoggingServer", "FunctionList", "ComputeServers", "DataStores" ]
+}
