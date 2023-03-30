@@ -1,0 +1,45 @@
+{
+"FunctionInvoke": "F1",
+“InvocationID”: “some_UUID”,
+"LoggingServer":"S3_A",
+"FunctionList":{
+        "F1":{
+                "FaaSServer":"ow_A",
+                "Actionname":"f1",
+                "Arguments":{
+                        "input1":"input1.csv",
+                        "input2":"input2.csv",
+                        "output":"output1.csv"
+                },
+                "InvokeNext":["F2"]
+        },
+        "F2":{
+                "FaaSServer":"ow_A",
+                "Actionname":"f2",
+                "Arguments":{
+                        "input":"output1.csv",
+                        "output":"output2.csv"
+                }
+        }
+},
+"ComputeServers":{
+        "ow_A":{
+                "FaaSType": "OpenWhisk",
+                "Region":"us-south",
+                "Endpoint":"https://api.us-south.cf.cloud.ibm.com",
+                "Namespace":"000000000000000000000000",
+                "API.key":"000000000000000000000000"
+        }
+},
+"DataStores":{
+        "S3_A":{
+                "Endpoint":"my_s3",
+                "Protocol":"https",
+                "AccessKey":"000000000000000000000000",
+                "SecretKey":"000000000000000000000000",
+                "Bucket":"spark7-bucket-01",
+                "Region":"us-east-1",
+                "Writable":"TRUE"
+        }
+}
+}
