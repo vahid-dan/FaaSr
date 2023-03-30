@@ -35,7 +35,7 @@ faasr_start <- function(faasr_payload) {
   # i.e. it depends/is triggered by multiple other functions and should only execute when the last trigger has been received
   
   # Invoke the user function, passing the parsed list as argument
-  faasr_result <- user)function_invoke(faasr)
+  faasr_result <- user_function(faasr)
   
   # Now trigger the next actions(s) if any
  faaSr_trigger(faaSr)
