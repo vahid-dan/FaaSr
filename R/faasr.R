@@ -10,6 +10,7 @@
 # faasr_trigger - generate trigger(s) for any additional user-specified actions
 
 library("jsonlite")
+library("aws.s3")
 
 # faasr_start is the function that starts execution of the user-supplied function
 # faasr_start is the entry point invoked by the FaaS platform (e.g. OpenWhisk, Lambda, GH Actions) when a container starts
@@ -40,11 +41,42 @@ faasr_parse <- function(faasr_payload) {
 }
 
 faasr_get_user_function_args <- function(faasr) {
+  # faasr is the list parsed/validated from JSON payload
   # First extract the name of the user function to invoke
   user_function = faasr$FunctionInvoke
   
   # Now extract the arguments for this function
   args = faasr$FunctionList[[user_function]]$Arguments
+}
+
+faasr_put_file <- function(faasr, server_name, local_folder, local_file, remote_folder, remote_file) {
+  # This should put a file into S3
+  # faasr is the list parsed/validated from JSON payload
+  # The name of the S3 server is server_name, a string that references an entry in the list stored in faasr with S3 configuration
+  # local and remote folder file names arer strings
+  
+  # TBD validate server_name exists
+  
+  # TBD prepare env variables for S3 access
+  
+  # TBD use aws.s3 to put data into the server
+  
+  # TBD log any errors
+}
+
+faasr_get_file <- function(faasr, server_name, remote_folder, remote_file, local_folder, local_file) {
+  # This should get a file from S3
+  # faasr is the list parsed/validated from JSON payload
+  # The name of the S3 server is server_name, a string that references an entry in the list stored in faasr with S3 configuration
+  # local and remote folder file names arer strings
+  
+  # TBD validate server_name exists
+  
+  # TBD prepare env variables for S3 access
+  
+  # TBD use aws.s3 to get data from the server
+  
+  # TBD log any errors
 }
 
   
