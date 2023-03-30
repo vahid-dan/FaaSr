@@ -1,3 +1,5 @@
+# work in progress - we want a JSON schema to validate a payload
+# there's an R library for this - https://cran.r-project.org/web/packages/jsonvalidate/vignettes/jsonvalidate.html
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://flare-forecast.org/FaaSr.schema.json",
