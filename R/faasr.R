@@ -104,5 +104,26 @@ faasr_log <- function(faasr,log_message) {
   # TBD use aws.s3 to put log file back into server
 }
 
- 
+faasr_trigger <- function(faasr) {
+  # Sends triggers to functions that the current function should invoke
+  # faasr is the list parsed/validated from JSON payload
+  
+  # First extract the name of the user function
+  user_function = faasr$FunctionInvoke
+
+  # Now get the list of InvokeNext
+  invoke_next = faasr$FunctionList[[user_function]]$InvokeNext
+  
+  # TBD check if the list is empty or not
+  
+  # TBD iterate through invoke_next and use FaaS-specific mechanisms to send trigger
+    # determine FaaS server name via faasr$FunctionList[[invoke_next_function]]$FaaSServer
+    # validate that FaaS server name exists in faasr$ComputeServers list
+    # check FaaSType from the named compute server
+    # if OpenWhisk - use OpenWhisk API to send trigger
+    # if Lambda - use Lambda API
+    # if GitHub Actions - use GH Actions
+}
+
+  
 
