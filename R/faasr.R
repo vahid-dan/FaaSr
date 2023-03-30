@@ -21,6 +21,9 @@ faasr_start <- function(faasr_payload) {
 
   # TBD need to check for error and return
   
+  # TBD if there is an empty InvocationID in the JSON, generate a UUID at random and add to faasr
+  # i.e. the first function in the invocation generates a UUID that is carried over to any others it triggers
+  
   # Now extract the name of the user-provided function to invoke
   user_function = get(faasr$FunctionInvoke)
   
@@ -79,5 +82,27 @@ faasr_get_file <- function(faasr, server_name, remote_folder, remote_file, local
   # TBD log any errors
 }
 
+faasr_log <- function(faasr,log_message) {
+  # Logs a message to the S3 log server
+  # faasr is the list parsed/validated from JSON payload
+  # the name of the S3 server is implicit from the validated JSON payload, key LoggingServer
+  # the name of the log file should be folder "logs" and file name "faasr_log_" + InvocationID + ".txt"
   
+  # extract name of logging server
+  log_server_name = faasr$LoggingServer
+  
+  # TBD validate server_name exists
+  
+  # TBD prepare env variables for S3 access
+  
+  # TBD set file name to be "faasr_log_" + faasr$InvocationID + ".txt"
+  
+  # TBD use aws.s3 to get log file from the server
+  
+  # TBD append message to the local file
+  
+  # TBD use aws.s3 to put log file back into server
+}
+
+ 
 
