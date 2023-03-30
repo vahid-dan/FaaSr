@@ -9,6 +9,7 @@
 # faasr_log - append to a log file stored in S3
 # faasr_trigger - generate trigger(s) for any additional user-specified actions
 
+library("jsonlite")
 
 # faasr_start is the function that starts execution of the user-supplied function
 # faasr_start is the entry point invoked by the FaaS platform (e.g. OpenWhisk, Lambda, GH Actions) when a container starts
@@ -20,7 +21,7 @@ faasr_start <- function(faasr_payload) {
   # TBD need to check for error and return
   
   # Now extract the name of the user-provided function to invoke
-  user_function = get(faasr$user_function)
+  user_function = get(faasr$FunctionInvoke)
   
   # Invoke the user function, passing the parsed list as argument
   faasr_result <- user)function_invoke(faasr)
@@ -38,6 +39,13 @@ faasr_parse <- function(faasr_payload) {
   # return an error if validation fails
 }
 
+faasr_get_user_function_args <- function(faasr) {
+  # First extract the name of the user function to invoke
+  user_function = faasr$FunctionInvoke
+  
+  # Now extract the arguments for this function
+  args = faasr$FunctionList[[user_function]]$Arguments
+}
 
   
 
