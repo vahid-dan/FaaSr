@@ -10,6 +10,7 @@
 # faasr_trigger - generate trigger(s) for any additional user-specified actions
 
 library("jsonlite")
+library("jsonvalidate")
 library("aws.s3")
 
 # faasr_start is the function that starts execution of the user-supplied function
@@ -19,7 +20,7 @@ faasr_start <- function(faasr_payload) {
   # First, call faasr_parse to validate the JSON payload, return parsed list
   faasr <- faasr_parse(faasr_payload)
 
-  # TBD first, need to check for parsing error and return if there's an error parsing the JSON file
+  # TBD first, need to check for parsing error and schema compliance and return if there's an error parsing/validating the JSON file
   
   # TBD second, need to check if the log server is correctly configured, otherwise return an error
   
