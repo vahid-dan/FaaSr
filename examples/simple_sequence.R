@@ -18,7 +18,7 @@ F1 <- function(faasr) {
   input2 <- read.table("local/input2.csv", header=F)
   output <- input1 * input2
   # if there's a header in csv file, "col.names=T"
-  write.table(output, file="output.csv", row.names=F, col.names=F)
+  write.table(output, file="local/output.csv", row.names=F, col.names=F)
   faasr_put_file(faasr, “S3_A”, “local”, “output.csv”, “folder”, args$output)
   faasr_log(faasr, “User function F1 finished”)
 }	
@@ -35,7 +35,7 @@ F2 <- function(faasr) {
   input <- read.table("local/input.csv", header=F)
   output <- input^2
   # if there's a header in csv file, "col.names=T"
-  write.table(output, file="output.csv", row.names=F, col.names=F)   
+  write.table(output, file="local/output.csv", row.names=F, col.names=F)   
   faasr_put_file(faasr, “S3_A”, “local”, “output.csv”, “folder”, args$output)
   faasr_log(faasr, “User function F2 finished”)
 }	
