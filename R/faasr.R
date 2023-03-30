@@ -19,13 +19,20 @@ faasr_start <- function(faasr_payload) {
   # First, call faasr_parse to validate the JSON payload, return parsed list
   faasr <- faasr_parse(faasr_payload)
 
-  # TBD need to check for error and return
+  # TBD first, need to check for parsing error and return if there's an error parsing the JSON file
+  
+  # TBD second, need to check if the log server is correctly configured, otherwise return an error
+  
+  # TBD third, need to check if the rest of the JSON payload is correctly configured - for anything incorrect, use faasr_log to log to S3, and then return an error
   
   # TBD if there is an empty InvocationID in the JSON, generate a UUID at random and add to faasr
   # i.e. the first function in the invocation generates a UUID that is carried over to any others it triggers
   
   # Now extract the name of the user-provided function to invoke
   user_function = get(faasr$FunctionInvoke)
+  
+  # TBD let's do this later - need to come up with a strategy for dealing with a function that is a dependence "sink", 
+  # i.e. it depends/is triggered by multiple other functions and should only execute when the last trigger has been received
   
   # Invoke the user function, passing the parsed list as argument
   faasr_result <- user)function_invoke(faasr)
