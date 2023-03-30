@@ -26,6 +26,8 @@ faasr_start <- function(faasr_payload) {
   
   # TBD third, need to check if the rest of the JSON payload is correctly configured - for anything incorrect, use faasr_log to log to S3, and then return an error
   
+  # TBD fourth, need to check if there are no invocation cycles
+  
   # TBD if there is an empty InvocationID in the JSON, generate a UUID at random and add to faasr
   # i.e. the first function in the invocation generates a UUID that is carried over to any others it triggers
   
