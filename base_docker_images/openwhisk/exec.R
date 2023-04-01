@@ -1,4 +1,5 @@
 #!/usr/local/bin/Rscript
+#This Rscript will be invoked when the action starts
 #This will be replaced by library("faasr")
 source("faasr.R")
 #Get all functions from Rscripts in the /action/ directory
