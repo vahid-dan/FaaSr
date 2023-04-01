@@ -161,37 +161,38 @@ faasr_trigger <- function(faasr) {
       
        # if OpenWhisk - use OpenWhisk API to send trigger
        if (next_server_type=="OpenWhisk"){ 
-        api_key <- faasr$ComputeServers[[next_server]]$API.key
-		    region <- faasr$ComputeServers[[next_server]]$Region
-		    namespace <- faasr$ComputeServers[[next_server]]$Namespace
-		    actionname <- faasr$FunctionList[[invoke_next_function]]$Actionname
+         api_key <- faasr$ComputeServers[[next_server]]$API.key
+	 region <- faasr$ComputeServers[[next_server]]$Region
+	 namespace <- faasr$ComputeServers[[next_server]]$Namespace
+	 actionname <- faasr$FunctionList[[invoke_next_function]]$Actionname
 		
-		    #Openwhisk - Get a token by using the API key
-		    url <- "https://iam.cloud.ibm.com/identity/token"
-		    body <- list(grant_type = "urn:ibm:params:oauth:grant-type:apikey",apikey=api_key)
-		    headers <- c("Content-Type" = "application/x-www-form-urlencoded")
-		    response <- POST(url = url,body = body,encode = "form",add_headers(.headers = headers))
-		    result <- content(response, as = "parsed")
-		    token <- paste("Bearer",result$access_token)
+	 #Openwhisk - Get a token by using the API key
+	 url <- "https://iam.cloud.ibm.com/identity/token"
+	 body <- list(grant_type = "urn:ibm:params:oauth:grant-type:apikey",apikey=api_key)
+	 headers <- c("Content-Type" = "application/x-www-form-urlencoded")
+	 response <- POST(url = url,body = body,encode = "form",add_headers(.headers = headers))
+	 result <- content(response, as = "parsed")
+	 token <- paste("Bearer",result$access_token)
 
-		    #Openwhisk - Invoke next action - action name should be described.
-		    url_2<- paste0("https://",region,".functions.cloud.ibm.com/api/v1/namespaces/",namespace,"/actions/faasr","?blocking=true&result=true")
-		    headers_2 <- c("accept"="application/json", "authorization"=token, "content-type"="application/json")
-		    data_2<-toJSON(faasr)
-		    curl_opts_2 <- list(post=TRUE, httpheader=headers_2, postfields=data_2)
-		    response_2 <- curlPerform(url=url_2, .opts=curl_opts_2)
-        } else {cat('{\"msg\":\"success_',user_function,'_next_action_',func,'will_be_executed by_',next_server_type,'\"}')}
+	 #Openwhisk - Invoke next action - action name should be described.
+	 url_2<- paste0("https://",region,".functions.cloud.ibm.com/api/v1/namespaces/",namespace,"/actions/faasr","?blocking=true&result=true")
+	 headers_2 <- c("accept"="application/json", "authorization"=token, "content-type"="application/json")
+	 data_2<-toJSON(faasr)
+	 curl_opts_2 <- list(post=TRUE, httpheader=headers_2, postfields=data_2)
+	 response_2 <- curlPerform(url=url_2, .opts=curl_opts_2)
+       } else {cat('{\"msg\":\"success_',user_function,'_next_action_',func,'will_be_executed by_',next_server_type,'\"}')}
       
-        # if Lambda - use Lambda API
-		    if (next_server_type=="Lambda"){
+	    
+       # if Lambda - use Lambda API
+       if (next_server_type=="Lambda"){
         
-        } else {}
+       } else {}
         
-        # if GitHub Actions - use GH Actions
-        if (next_server_type=="GitHubActions"){
+       # if GitHub Actions - use GH Actions
+       if (next_server_type=="GitHubActions"){
         
-        } else {}
-	   }
+       } else {}
+   }
     
 }
 
