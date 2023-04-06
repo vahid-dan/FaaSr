@@ -14,6 +14,7 @@ library("jsonvalidate")
 library("aws.s3")
 library("RCurl")
 library("httr")
+library("uuid")
 
 # faasr_start is the function that starts execution of the user-supplied function
 # faasr_start is the entry point invoked by the FaaS platform (e.g. OpenWhisk, Lambda, GH Actions) when a container starts
@@ -32,6 +33,9 @@ faasr_start <- function(faasr_payload) {
   
   # TBD if there is an empty InvocationID in the JSON, generate a UUID at random and add to faasr
   # i.e. the first function in the invocation generates a UUID that is carried over to any others it triggers
+  if (length(faasr$InvocationID)==0){faasr$InvocationID<-UUIDgenerate()
+  # if InvocationID doesn't have valid form, generate a UUID 
+  } else if (UUIDvalidate(faasr$InvocationID)==FALSE){faasr$InvocationID<-UUIDgenerate()}
   
   # Now extract the name of the user-provided function to invoke
   user_function = get(faasr$FunctionInvoke)
@@ -66,40 +70,46 @@ faasr_get_user_function_args <- function(faasr) {
 
 faasr_put_file <- function(faasr, server_name, local_folder, local_file, remote_folder, remote_file) {
   # This should put a file into S3
+  # TBD validate server_name exists
+  if (server_name %in% names(faasr$DataStores)){NULL
+   } else{cat('{\"msg\":\"invalid logging server name\"}')
+          stop()}
+	
   # faasr is the list parsed/validated from JSON payload
   # The name of the S3 server is server_name, a string that references an entry in the list stored in faasr with S3 configuration
   # local and remote folder file names arer strings
   target_s3 <- faasr$DataStores[[server_name]]
-  Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region)
   put_file <- paste0(local_folder,"/",local_file)
   put_file_s3 <- paste0(remote_folder, "/", remote_file)
-  put_object(file=put_file, object=put_file_s3, bucket=target_s3$Bucket)
-  
-  # TBD validate server_name exists
   
   # TBD prepare env variables for S3 access
+  Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region)
   
   # TBD use aws.s3 to put data into the server
+  put_object(file=put_file, object=put_file_s3, bucket=target_s3$Bucket)
   
   # TBD log any errors
 }
 
 faasr_get_file <- function(faasr, server_name, remote_folder, remote_file, local_folder, local_file) {
   # This should get a file from S3
+  # TBD validate server_name exists
+  if (server_name %in% names(faasr$DataStores)){NULL
+   } else{cat('{\"msg\":\"invalid logging server name\"}')
+          stop()}
+	
   # faasr is the list parsed/validated from JSON payload
   # The name of the S3 server is server_name, a string that references an entry in the list stored in faasr with S3 configuration
-  # local and remote folder file names arer strings
+  # local and remote folder file names arer strings	
   target_s3 <- faasr$DataStores[[server_name]]
-  Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region)
   get_file <- paste0(local_folder,"/",local_file)
   get_file_s3 <- paste0(remote_folder, "/", remote_file)
-  save_object(get_file_s3, file=get_file, bucket=target_s3$Bucket)
-  # TBD validate server_name exists
-  
+	
   # TBD prepare env variables for S3 access
+  Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region)
   
-  # TBD use aws.s3 to get data from the server
-  
+  # TBD use aws.s3 to get data from the server	
+  save_object(get_file_s3, file=get_file, bucket=target_s3$Bucket)
   # TBD log any errors
 }
 
@@ -113,16 +123,28 @@ faasr_log <- function(faasr,log_message) {
   log_server_name = faasr$LoggingServer
   
   # TBD validate server_name exists
-  
+  if (log_server_name %in% names(faasr$DataStores)){NULL
+   } else{cat('{\"msg\":\"invalid logging server name\"}')
+          stop()}
+	
   # TBD prepare env variables for S3 access
+  log_server <- faasr$DataStores[[log_server_name]]
+  Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region)
   
   # TBD set file name to be "faasr_log_" + faasr$InvocationID + ".txt"
-  
+  log_file <- paste0(faasr$InvocationID, faasr$FunctionInvoke,".txt")
+	
   # TBD use aws.s3 to get log file from the server
-  
+  if (object_exists(log_file, log_server$Bucket)) {save_object(log_file, file=log_file, bucket=log_server$Bucket)}
+	
   # TBD append message to the local file
-  
+  logs <- log_message
+  dir.create(faasr$InvocationID)
+  write(logs, log_file, append=TRUE)
+	
   # TBD use aws.s3 to put log file back into server
+  put_object(file=log_file, object=log_file, bucket=log_server$Bucket)
+	
 }
 
 faasr_trigger <- function(faasr) {
@@ -144,9 +166,6 @@ faasr_trigger <- function(faasr) {
 		  
        #Change the FunctionInvoke to next function name
        faasr$FunctionInvoke <- invoke_next_function
-		   
-       #TBD generate unique InvocationID for next functions : [function name]-[random number+characters]-[time]
-       #faasr$InvocationID <- paste0("F1-",paste(sample(c(1:9, letters), 6, replace = TRUE), collapse=""),"-",as.character(Sys.time()))
 		   
        # determine FaaS server name via faasr$FunctionList[[invoke_next_function]]$FaaSServer
        next_server <- faasr$FunctionList[[invoke_next_function]]$FaaSServer
