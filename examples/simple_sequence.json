@@ -1,6 +1,6 @@
 {
 "FunctionInvoke": "F1",
-“InvocationID”: “some_UUID”,
+"InvocationID": "some_UUID",
 "LoggingServer":"S3_A",
 "FunctionList":{
         "F1":{
