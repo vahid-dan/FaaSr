@@ -22,24 +22,59 @@
     "FunctionList": {
       "description": "A list of one or more functions that describes the workflow",
       "type": "object",
-      "properties": {
-        # need to figure out how to represent a user-provided key here, e.g. "F1"
+      "patternProperties": {
+        "":{
+            "type":"object",
+            "properties":{
+                  "FaaSServer":{"type":"string"},
+                  "Actionname":{"type":"string"},
+                  "Arguments":{"type":"object"},
+                  "InvokeNext":{"type":"array"}
+                  },
+            "required":["FaaSServer", "Actionname"],
+            "additionalProperties": false
+        }
       }
       # need to figure out how to represent that at least one entry is required
     },
     "ComputeServers": {
       "description": "A list of one or more FaaS compute servers used in the workflow",
       "type": "object",
-      "properties": {
-        # need to figure out how to represent a user-provided key here, e.g. "ow_A"
+      "patternProperties": {
+        "":{
+            "type":"object",
+            "properties":{
+                  "FaaSType":{"enum":["Openwhisk","GithubAction","Lambda"]},
+                  "Region":{"type":"string"},
+                  "Endpoint":{"type":"string"},
+                  "Namespace":{"type":"string"},
+                  "API.key":{"type":"string"}
+                  },
+            "required":["FaaSType", "Region", "Endpoint", "Namespace", "API.key"],
+            "additionalProperties": false
+        }
       }
       # need to figure out how to represent that at least one entry is required
     },
     "DataStores": {
       "description": "A list of one or more S3 data servers used in the workflow",
       "type": "object",
-      "properties": {
-        # need to figure out how to represent a user-provided key here, e.g. "S3_A"
+      "patternProperties": {
+        "":{
+            "type":"object",
+            "properties":{
+                  "Endpoint":{"type":"string"},
+                  "Protocol":{"type":"string"},
+                  "AccessKey":{"type":"string"},
+                  "SecretKey":{"type":"string"},
+                  "Bucket":{"type":"string"},
+                  "Region":{"type":"string"},
+                  # Can be turned into boolean
+                  "Writable":{"type":"string"}
+                  },
+            "required":["FaaSServer", "Actionname"],
+            "additionalProperties": false
+        }
       }
       # need to figure out how to represent that at least one entry is required
     }
