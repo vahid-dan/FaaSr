@@ -44,7 +44,7 @@
         "":{
             "type":"object",
             "properties":{
-                  "FaaSType":{"enum":["Openwhisk","GithubAction","Lambda"]},
+                  "FaaSType":{"enum":["OpenWhisk","GithubAction","Lambda"]},
                   "Region":{"type":"string"},
                   "Endpoint":{"type":"string"},
                   "Namespace":{"type":"string"},
