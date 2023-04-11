@@ -72,7 +72,7 @@
                   # Can be turned into boolean
                   "Writable":{"type":"string"}
                   },
-            "required":["FaaSServer", "Actionname"],
+            "required":["Endpoint", "Protocol", "AccessKey", "SecretKey", "Bucket", "Region"],
             "additionalProperties": false
         }
       }
