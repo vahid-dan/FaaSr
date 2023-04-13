@@ -153,7 +153,7 @@ faasr_log <- function(faasr,log_message) {
   # TBD append message to the local file
   logs <- log_message
   dir.create(faasr$InvocationID)
-  write(logs, log_file, append=TRUE)
+  write.table(logs, log_file, col.names=FALSE, row.names = FALSE, append=TRUE, quote=FALSE)
 	
   # TBD use aws.s3 to put log file back into server
   put_object(file=log_file, object=log_file, bucket=log_server$Bucket)
