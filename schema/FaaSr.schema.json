@@ -36,7 +36,7 @@
             "additionalProperties": false
         }
       },
-      "$comment":"need to figure out how to represent that at least one entry is required"
+      "$comment":"need to need to figure out how to represent that at least one entry is required"
     },
     "ComputeServers": {
       "description": "A list of one or more FaaS compute servers used in the workflow",
