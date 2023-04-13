@@ -58,11 +58,16 @@ faasr_parse <- function(faasr_payload) {
   # TBD need to perform all validations here
   faasr_schema <- readLines("FaaSr.schema.json")
   faasr_schema_valid <- json_validator(faasr_schema)
-  if (faasr_schema_valid(faasr_payload)){ return(faasr)
-					 
+  
+  if (validate(faasr_payload)){NULL} else{
+	  log <- attr(validate(faasr_payload),"err")
+	  cat('{\"msg\":\"',log,'\"}')
+	  stop()}
+	       
+  if (faasr_schema_valid(faasr_payload)){return(faasr)} else{
+	  cat('{\"msg\":\"invalid faasr payload\"}')
+          stop()} 
   # return an error if validation fails
-  } else{cat('{\"msg\":\"invalid faasr payload\"}')
-          stop()}
 }
 
 faasr_get_user_function_args <- function(faasr) {
