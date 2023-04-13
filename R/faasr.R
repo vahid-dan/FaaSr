@@ -35,8 +35,10 @@ faasr_start <- function(faasr_payload) {
   # i.e. the first function in the invocation generates a UUID that is carried over to any others it triggers
   if (length(faasr$InvocationID)==0){faasr$InvocationID<-UUIDgenerate()
   # if InvocationID doesn't have valid form, generate a UUID 
-  } else if (UUIDvalidate(faasr$InvocationID)==FALSE){cat('{\"msg\":\"invalid Invocation ID\"}')
-          stop()}
+  } else if (UUIDvalidate(faasr$InvocationID)==FALSE){faasr$InvocationID<-UUIDgenerate()}
+	  
+	  #cat('{\"msg\":\"invalid Invocation ID\"}')
+          #stop()}
   
   # Now extract the name of the user-provided function to invoke
   user_function = get(faasr$FunctionInvoke)
