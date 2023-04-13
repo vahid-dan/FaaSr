@@ -35,7 +35,8 @@ faasr_start <- function(faasr_payload) {
   # i.e. the first function in the invocation generates a UUID that is carried over to any others it triggers
   if (length(faasr$InvocationID)==0){faasr$InvocationID<-UUIDgenerate()
   # if InvocationID doesn't have valid form, generate a UUID 
-  } else if (UUIDvalidate(faasr$InvocationID)==FALSE){faasr$InvocationID<-UUIDgenerate()}
+  } else if (UUIDvalidate(faasr$InvocationID)==FALSE){cat('{\"msg\":\"invalid Invocation ID\"}')
+          stop()}
   
   # Now extract the name of the user-provided function to invoke
   user_function = get(faasr$FunctionInvoke)
@@ -137,7 +138,7 @@ faasr_log <- function(faasr,log_message) {
   Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region)
   
   # TBD set file name to be "faasr_log_" + faasr$InvocationID + ".txt"
-  log_file <- paste0(faasr$InvocationID, faasr$FunctionInvoke,".txt")
+  log_file <- paste0(faasr$InvocationID, "/", faasr$FunctionInvoke,".txt")
 	
   # TBD use aws.s3 to get log file from the server
   if (object_exists(log_file, log_server$Bucket)) {save_object(log_file, file=log_file, bucket=log_server$Bucket)}
@@ -208,14 +209,14 @@ faasr_trigger <- function(faasr) {
       
 	    
        # if Lambda - use Lambda API
-       if (next_server_type=="Lambda"){
+       if (next_server_type=="Lambda"){ NULL
         
-       } else {}
+       } else { NULL }
         
        # if GitHub Actions - use GH Actions
-       if (next_server_type=="GitHubActions"){
+       if (next_server_type=="GitHubActions"){ NULL
         
-       } else {}
+       } else { NULL}
    }
     
 }
