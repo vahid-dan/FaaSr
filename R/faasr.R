@@ -50,7 +50,7 @@ faasr_start <- function(faasr_payload) {
   faasr_result <- user_function(faasr)
   
   # Now trigger the next actions(s) if any
- faaSr_trigger(faasr)
+ faasr_trigger(faasr)
 }
 
 # faasr_parse is the function that parses and validates the JSON payload containing all configuration key/value pairs for this invocation
