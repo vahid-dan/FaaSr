@@ -217,4 +217,7 @@ faasr_trigger <- function(faasr) {
        if (next_server_type=="GitHubActions"){ NULL
         
        } else { NULL}
+       }
    }
+}
+	
