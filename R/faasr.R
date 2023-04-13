@@ -54,7 +54,7 @@ faasr_start <- function(faasr_payload) {
 # faasr_parse is the function that parses and validates the JSON payload containing all configuration key/value pairs for this invocation
 faasr_parse <- function(faasr_payload) {
   # First, attempt to read JSON
-  faasr <- read_json(faasr_payload)
+  faasr <- fromJSON(faasr_payload)
   # TBD need to perform all validations here
   faasr_schema <- readLines("FaaSr.schema.json")
   faasr_schema_valid <- json_validator(faasr_schema)
