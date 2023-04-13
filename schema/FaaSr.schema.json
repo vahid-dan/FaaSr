@@ -1,6 +1,7 @@
-# work in progress - we want a JSON schema to validate a payload
-# there's an R library for this - https://cran.r-project.org/web/packages/jsonvalidate/vignettes/jsonvalidate.html
 {
+  "$comment":"work in progress - we want a JSON schema to validate a payload,
+  there's an R library for this - https://cran.r-project.org/web/packages/jsonvalidate/vignettes/jsonvalidate.html"
+ 
   "$schema": "https://json-schema.org/draft-04/schema",
   "$id": "https://flare-forecast.org/FaaSr.schema.json",
   "title": "FaaSr invocation payload",
@@ -34,8 +35,8 @@
             "required":["FaaSServer", "Actionname"],
             "additionalProperties": false
         }
-      }
-      # need to figure out how to represent that at least one entry is required
+      },
+      "$comment":"need to figure out how to represent that at least one entry is required"
     },
     "ComputeServers": {
       "description": "A list of one or more FaaS compute servers used in the workflow",
@@ -53,8 +54,8 @@
             "required":["FaaSType", "Region", "Endpoint", "Namespace", "API.key"],
             "additionalProperties": false
         }
-      }
-      # need to figure out how to represent that at least one entry is required
+      },
+      "$comment":"need to figure out how to represent that at least one entry is required"
     },
     "DataStores": {
       "description": "A list of one or more S3 data servers used in the workflow",
@@ -69,14 +70,14 @@
                   "SecretKey":{"type":"string"},
                   "Bucket":{"type":"string"},
                   "Region":{"type":"string"},
-                  # Can be turned into boolean
+                  "$comment":"Writable can be converted to the boolean",
                   "Writable":{"type":"string"}
                   },
             "required":["Endpoint", "Protocol", "AccessKey", "SecretKey", "Bucket", "Region"],
             "additionalProperties": false
         }
-      }
-      # need to figure out how to represent that at least one entry is required
+      },
+       "$comment":"need to figure out how to represent that at least one entry is required"
     }
   },
   "required": [ "FunctionInvoke", "LoggingServer", "FunctionList", "ComputeServers", "DataStores" ]
