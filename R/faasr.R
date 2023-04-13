@@ -218,8 +218,3 @@ faasr_trigger <- function(faasr) {
         
        } else { NULL}
    }
-    
-}
-
-  
-
