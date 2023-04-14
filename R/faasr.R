@@ -58,6 +58,9 @@ faasr_parse <- function(faasr_payload) {
   # First, attempt to read JSON
   
   # TBD need to perform all validations here
+  # url <- "https://raw.githubusercontent.com/renatof/FaaSr/main/schema/FaaSr.schema.json"
+  # faasr_schema <- readLines(url)
+  # We can read the schema by using github raw contents instead of adding the schema into a docker image, however, it would make an overhead. 
   faasr_schema <- readLines("FaaSr.schema.json")
   faasr_schema_valid <- json_validator(faasr_schema)
   
