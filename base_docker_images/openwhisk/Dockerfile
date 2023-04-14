@@ -16,7 +16,8 @@ RUN R -e "install.packages('aws.s3', repos='https://cloud.R-project.org')" && \
     R -e "install.packages('devtools', repos='https://cloud.R-project.org')" && \
     R -e "install.packages('jsonvalidate', repos='https://cloud.R-project.org')" && \
     R -e "install.packages('RCurl', repos='https://cloud.R-project.org')" && \
-    R -e "install.packages('httr', repos='https://cloud.R-project.org')"
+    R -e "install.packages('httr', repos='https://cloud.R-project.org')" && \
+    R -e "install.packages('uuid', repos='https://cloud.R-project.org')"
 # \&&   R -e "devtools::install_git('renatof/FaaSr')"
 
 #Setup Port
@@ -35,6 +36,9 @@ ADD exec.R /action/exec
 RUN chmod +x /action/exec
 
 #Add source R file - this will be removed once the library generated.
-ADD faasr.R /action/
+ADD https://raw.githubusercontent.com/renatof/FaaSr/main/R/faasr.R /action/
+
+#Add json schema
+ADD https://raw.githubusercontent.com/renatof/FaaSr/main/schema/FaaSr.schema.json /action/
 
 CMD ["/bin/bash", "-c", "cd actionProxy && python3 actionproxy.py"]
