@@ -212,7 +212,7 @@ faasr_trigger <- function(faasr) {
 	 #Openwhisk - Invoke next action - action name should be described.
 	 url_2<- paste0("https://",region,".functions.cloud.ibm.com/api/v1/namespaces/",namespace,"/actions/faasr","?blocking=true&result=true")
 	 headers_2 <- c("accept"="application/json", "authorization"=token, "content-type"="application/json")
-	 data_2<-toJSON(faasr)
+	 data_2<-toJSON(faasr, auto_unbox=TRUE)
 	 curl_opts_2 <- list(post=TRUE, httpheader=headers_2, postfields=data_2)
 	 response_2 <- curlPerform(url=url_2, .opts=curl_opts_2)
        } else {cat('{\"msg\":\"success_',user_function,'_next_action_',func,'will_be_executed by_',next_server_type,'\"}')}
