@@ -207,7 +207,11 @@ faasr_trigger <- function(faasr) {
 	 headers <- c("Content-Type"="application/x-www-form-urlencoded")
 	 response <- POST(url = url,body = body,encode = "form",add_headers(.headers = headers))
 	 result <- content(response, as = "parsed")
-	 token <- paste("Bearer",result$access_token)
+	 if (length(result$errorMessage)==0){token <- paste("Bearer",result$access_token)
+	 } else {faasr_log(faasr, result$errorMessage)
+		 cat('{\"msg\":\"unable to invoke next action\"}')
+			break}
+	 
 
 	 #Openwhisk - Invoke next action - action name should be described.
 	 url_2<- paste0("https://",region,".functions.cloud.ibm.com/api/v1/namespaces/",namespace,"/actions/faasr","?blocking=true&result=true")
