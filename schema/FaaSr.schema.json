@@ -28,7 +28,7 @@
                   "FaaSServer":{"type":"string"},
                   "Actionname":{"type":"string"},
                   "Arguments":{"type":"object"},
-                  "InvokeNext":{"type":"array"}
+                  "InvokeNext":{"type":["string"],["array"]}
                   },
             "required":["FaaSServer", "Actionname"],
             "additionalProperties": false
