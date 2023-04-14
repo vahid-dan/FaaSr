@@ -69,7 +69,7 @@ faasr_parse <- function(faasr_payload) {
   faasr <- fromJSON(faasr_payload)	       
   if (faasr_schema_valid(faasr_payload)){return(faasr)} else{
 	  log <- attr(faasr_schema_valid(faasr_payload, verbose=TRUE, greedy=TRUE),"errors")
-	  faasr_log(log, faasr)
+	  faasr_log(faasr, log)
 	  cat('{\"msg\":\"invalid faasr payload\"}')
           stop()} 
   # return an error if validation fails
