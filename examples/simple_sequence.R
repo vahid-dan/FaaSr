@@ -29,7 +29,7 @@ F2 <- function(faasr) {
   args <- faasr_get_user_function_args(faasr)
   # return arguments for this function (F2)
   # expects input1, input2: input file names; output: 
-  faasr_get_file(faasr, "S3_A", "folder", args$input1, "local", "input.csv")
+  faasr_get_file(faasr, "S3_A", "folder", args$input, "local", "input.csv")
   # need to implement output <- input * input
   # if there's a header in each csv file, "header=T"
   input <- read.table("local/input.csv", sep=",", header=F)
