@@ -50,13 +50,13 @@ faasr_start <- function(faasr_payload) {
   faasr_result <- user_function(faasr)
   
   # Now trigger the next actions(s) if any
- faasr_trigger(faasr)
+  faasr_trigger(faasr)
 }
 
 # faasr_parse is the function that parses and validates the JSON payload containing all configuration key/value pairs for this invocation
 faasr_parse <- function(faasr_payload) {
   # First, attempt to read JSON
-  faasr <- fromJSON(faasr_payload)
+  
   # TBD need to perform all validations here
   faasr_schema <- readLines("FaaSr.schema.json")
   faasr_schema_valid <- json_validator(faasr_schema)
@@ -65,8 +65,11 @@ faasr_parse <- function(faasr_payload) {
 	  log <- attr(validate(faasr_payload),"err")
 	  cat('{\"msg\":\"',log,'\"}')
 	  stop()}
-	       
+	
+  faasr <- fromJSON(faasr_payload)	       
   if (faasr_schema_valid(faasr_payload)){return(faasr)} else{
+	  log <- attr(faasr_schema_valid(faasr_payload, verbose=TRUE, greedy=TRUE),"errors")
+	  faasr_log(log, faasr)
 	  cat('{\"msg\":\"invalid faasr payload\"}')
           stop()} 
   # return an error if validation fails
@@ -201,7 +204,7 @@ faasr_trigger <- function(faasr) {
 	 #Openwhisk - Get a token by using the API key
 	 url <- "https://iam.cloud.ibm.com/identity/token"
 	 body <- list(grant_type = "urn:ibm:params:oauth:grant-type:apikey",apikey=api_key)
-	 headers <- c("Content-Type" = "application/x-www-form-urlencoded")
+	 headers <- c("Content-Type"="application/x-www-form-urlencoded")
 	 response <- POST(url = url,body = body,encode = "form",add_headers(.headers = headers))
 	 result <- content(response, as = "parsed")
 	 token <- paste("Bearer",result$access_token)
