@@ -62,19 +62,27 @@ faasr_parse <- function(faasr_payload) {
   # faasr_schema <- readLines(url)
   # We can read the schema by using github raw contents instead of adding the schema into a docker image, however, it would make an overhead. 
   faasr_schema <- readLines("FaaSr.schema.json")
-  faasr_schema_valid <- json_validator(faasr_schema)
+  faasr_schema_valid <- json_validator(faasr_schema, engine="ajv")
   
   if (validate(faasr_payload)){NULL} else{
 	  log <- attr(validate(faasr_payload),"err")
 	  cat('{\"msg\":\"',log,'\"}')
 	  stop()}
 	
-  faasr <- fromJSON(faasr_payload)	       
+  faasr <- fromJSON(faasr_payload)
+  # schema check - if it returns TRUE, returns faasr
   if (faasr_schema_valid(faasr_payload)){return(faasr)} else{
-	  log <- attr(faasr_schema_valid(faasr_payload, verbose=TRUE, greedy=TRUE),"errors")
-	  faasr_log(faasr, log)
+	  #if it returns FALSE, returns 
+	  #TBD it can return 1. error msg, 2. logs from jsonvalidate.
+	  #message_schema <- attr(faasr_schema_valid(faasr_payload, verbose=TRUE, greedy=TRUE),"errors")
+	  #tag <- c("schemaPath", "message")
+	  #log <- message_schema[,tag]
+	  #log_json <- toJSON(log)
+	  #cat('{\"msg\":\"',log_json,'\"}')
 	  cat('{\"msg\":\"invalid faasr payload\"}')
-          stop()} 
+          stop()
+	  }
+		
   # return an error if validation fails
 }
 
