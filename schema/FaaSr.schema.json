@@ -65,7 +65,7 @@
                   "FaaSType":{"enum":["Lambda"]},
                   "Region":{"type":"string","minLength": 1},
                   "AccessKey":{"type":"string","minLength": 1},
-                  "SecretKey":{"type":"string","minLength": 1},
+                  "SecretKey":{"type":"string","minLength": 1}
                   },
             "required":["FaaSType", "Region", "AccessKey", "SecretKey"],
             "additionalProperties": false
