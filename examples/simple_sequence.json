@@ -1,6 +1,6 @@
 {
 "FunctionInvoke": "F1",
-"InvocationID": "some_UUID",
+"InvocationID": "0b7f133e-bdfc-4d69-842f-63b15d9e68a8",
 "LoggingServer":"S3_A",
 "FunctionList":{
         "F1":{
@@ -29,7 +29,15 @@
                 "Endpoint":"https://api.us-south.cf.cloud.ibm.com",
                 "Namespace":"000000000000000000000000",
                 "API.key":"000000000000000000000000"
+        },
+
+        "lambda_a":{
+                "FaaSType": "Lambda",
+                "Region":"us-east",
+                "AccessKey":"https://api.us-south.cf.cloud.aws.com",
+                "SecretKey":"000000000000000000000000",
         }
+
 },
 "DataStores":{
         "S3_A":{
@@ -41,5 +49,10 @@
                 "Region":"us-east-1",
                 "Writable":"TRUE"
         }
-}
+},
+"ActionContainers":{
+        "f1":"dockerhub_containerX",
+        "f2":"dockerhub_containerY",
+        "f3":"dockerhub_containerX"
+        }
 }
