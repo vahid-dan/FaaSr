@@ -46,6 +46,12 @@ faasr_start <- function(faasr_payload) {
   # TBD let's do this later - need to come up with a strategy for dealing with a function that is a dependence "sink", 
   # i.e. it depends/is triggered by multiple other functions and should only execute when the last trigger has been received
   
+  # mark the function invoked as "done" 	
+  if (!dir.exists(faasr$InvocationID)){dir.create(faasr$InvocationID)}
+  file_name <- paste0(faasr$FunctionInvoke, ".done")
+  write.table("TRUE", file=paste0(faasr$InvocationID, "/", file_name), row.names=F, col.names=F)
+  faasr_put_file(faasr, faasr$LoggingServer, faasr$InvocationID, file_name, faasr$InvocationID, file_name)
+	
   # Invoke the user function, passing the parsed list as argument
   faasr_result <- user_function(faasr)
   
