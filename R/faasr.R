@@ -44,17 +44,17 @@ faasr_start <- function(faasr_payload) {
   user_function = get(faasr$FunctionInvoke)
   
   # TBD let's do this later - need to come up with a strategy for dealing with a function that is a dependence "sink", 
-  # i.e. it depends/is triggered by multiple other functions and should only execute when the last trigger has been received
+  # i.e. it depends/is triggered by multiple other functions and should only execute when the last trigger has been receive
+	
+  # Invoke the user function, passing the parsed list as argument
+  faasr_result <- user_function(faasr)
   
   # mark the function invoked as "done" 	
   if (!dir.exists(faasr$InvocationID)){dir.create(faasr$InvocationID)}
   file_name <- paste0(faasr$FunctionInvoke, ".done")
   write.table("TRUE", file=paste0(faasr$InvocationID, "/", file_name), row.names=F, col.names=F)
-  faasr_put_file(faasr, faasr$LoggingServer, faasr$InvocationID, file_name, faasr$InvocationID, file_name)
+  faasr_put_file(faasr, faasr$LoggingServer, faasr$InvocationID, file_name, faasr$InvocationID, file_name)	
 	
-  # Invoke the user function, passing the parsed list as argument
-  faasr_result <- user_function(faasr)
-  
   # Now trigger the next actions(s) if any
   faasr_trigger(faasr)
 }
@@ -172,7 +172,7 @@ faasr_log <- function(faasr,log_message) {
 	
   # TBD append message to the local file
   logs <- log_message
-  dir.create(faasr$InvocationID)
+  if (!dir.exists(faasr$InvocationID)){dir.create(faasr$InvocationID)}
   write.table(logs, log_file, col.names=FALSE, row.names = FALSE, append=TRUE, quote=FALSE)
 	
   # TBD use aws.s3 to put log file back into server
