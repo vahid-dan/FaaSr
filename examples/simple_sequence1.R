@@ -1,4 +1,4 @@
-library("FaaSr")
+#library("FaaSr")
         
 F1 <- function(faasr) {
   # print("Hello from inside function F1")
@@ -8,7 +8,7 @@ F1 <- function(faasr) {
   faasr_get_file(faasr, "S3_A", "folder", args$input1, "local", "input1.csv")
   faasr_get_file(faasr, "S3_A", "folder", args$input2, "local", "input2.csv")
   # need to implement output <- input1 * input2
-# if there's a header in each csv file, "header=T"
+  # if there's a header in each csv file, "header=T"
   input1 <- read.table("local/input1.csv", sep=",", header=F)
   input2 <- read.table("local/input2.csv", sep=",", header=F)
   output <- input1 + input2
