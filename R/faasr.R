@@ -22,7 +22,7 @@ library("uuid")
 faasr_start <- function(faasr_payload) {
   # First, call faasr_parse to validate the JSON payload, return parsed list
   faasr <- faasr_parse(faasr_payload)
- 
+
   # TBD first, need to check for parsing error and schema compliance and return if there's an error parsing/validating the JSON file
   
   # TBD second, need to check if the log server is correctly configured, otherwise return an error
@@ -40,6 +40,9 @@ faasr_start <- function(faasr_payload) {
 	  #cat('{\"msg\":\"invalid Invocation ID\"}')
           #stop()}
   
+  pre <- faasr_workflow(faasr)
+  faasr_check(faasr, pre)
+	
   # Now extract the name of the user-provided function to invoke
   user_function = get(faasr$FunctionInvoke)
   
