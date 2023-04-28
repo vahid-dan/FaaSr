@@ -128,7 +128,6 @@ faasr_workflow <- function(faasr){
 	
 	# build empty lists for the graph and predecessors.
 	graph <- list()
-	pre <- list()
 	
 	# build the graph indicating adjacent nodes, e.g., "F1":["F2","F3"], so on.
 	for (func in names(faasr$FunctionList)){
@@ -159,10 +158,12 @@ faasr_workflow <- function(faasr){
 	}
 	# do dfs starting with function invoke.
 	dfs(faasr$FunctionInvoke, faasr$FunctionInvoke)
+	return(graph)
 }
 
-faasr_predecessors_list<- function(faasr){
+faasr_predecessors_list<- function(faasr, graph){
 	# find the predecessors and add them to the list "pre" 
+	pre <- list()
 	for (func in names(faasr$FunctionList)){
 		if (faasr$FunctionInvoke %in% graph[[func]]){
 		pre <- c(pre, func)
