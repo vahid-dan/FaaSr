@@ -9,11 +9,11 @@ F1 <- function(faasr) {
   faasr_get_file(faasr, "S3_A", "folder", args$input2, "local", "input2.csv")
   # need to implement output <- input1 * input2
   # if there's a header in each csv file, "header=T"
-  input1 <- read.table("local/input1.csv", sep=",", header=F)
-  input2 <- read.table("local/input2.csv", sep=",", header=F)
+  input1 <- read.table("local/input1.csv", sep=",", header=T)
+  input2 <- read.table("local/input2.csv", sep=",", header=T)
   output <- input1 + input2
   # if there's a header in csv file, "col.names=T"
-  write.table(output, file="local/output.csv", sep=",", row.names=F, col.names=F)
+  write.table(output, file="local/output.csv", sep=",", row.names=F, col.names=T)
   faasr_put_file(faasr, "S3_A", "local", "output.csv", "folder", args$output)
   faasr_log(faasr, "User function F1 finished")
 }	
@@ -28,11 +28,11 @@ F2 <- function(faasr) {
   faasr_get_file(faasr, "S3_A", "folder", args$input2, "local", "input2.csv")
   # need to implement output <- input * input
   # if there's a header in each csv file, "header=T"
-  input1 <- read.table("local/input1.csv", sep=",", header=F)
-  input2 <- read.table("local/input2.csv", sep=",", header=F)
+  input1 <- read.table("local/input1.csv", sep=",", header=T)
+  input2 <- read.table("local/input2.csv", sep=",", header=T)
   output <- input2 - input1
   # if there's a header in csv file, "col.names=T"
-  write.table(output, file="local/output.csv", sep=",", row.names=F, col.names=F)   
+  write.table(output, file="local/output.csv", sep=",", row.names=F, col.names=T)   
   faasr_put_file(faasr, "S3_A", "local", "output.csv", "folder", args$output)
   faasr_log(faasr, "User function F2 finished")
 }	
@@ -46,11 +46,11 @@ F3 <- function(faasr) {
   faasr_get_file(faasr, "S3_A", "folder", args$input2, "local", "input2.csv")
   # need to implement output <- input * input
   # if there's a header in each csv file, "header=T"
-  input1 <- read.table("local/input1.csv", sep=",", header=F)
-  input2 <- read.table("local/input2.csv", sep=",", header=F)
+  input1 <- read.table("local/input1.csv", sep=",", header=T)
+  input2 <- read.table("local/input2.csv", sep=",", header=T)
   output <- input2 - input1
   # if there's a header in csv file, "col.names=T"
-  write.table(output, file="local/output.csv", sep=",", row.names=F, col.names=F)   
+  write.table(output, file="local/output.csv", sep=",", row.names=F, col.names=T)   
   faasr_put_file(faasr, "S3_A", "local", "output.csv", "folder", args$output)
   faasr_log(faasr, "User function F3 finished")
 }	
@@ -64,11 +64,11 @@ F4 <- function(faasr) {
   faasr_get_file(faasr, "S3_A", "folder", args$input2, "local", "input2.csv")
   # need to implement output <- input * input
   # if there's a header in each csv file, "header=T"
-  input1 <- read.table("local/input1.csv", sep=",", header=F)
-  input2 <- read.table("local/input2.csv", sep=",", header=F)
+  input1 <- read.table("local/input1.csv", sep=",", header=T)
+  input2 <- read.table("local/input2.csv", sep=",", header=T)
   output <- input2 + input1
   # if there's a header in csv file, "col.names=T"
-  write.table(output, file="local/output.csv", sep=",", row.names=F, col.names=F)   
+  write.table(output, file="local/output.csv", sep=",", row.names=F, col.names=T)   
   faasr_put_file(faasr, "S3_A", "local", "output.csv", "folder", args$output)
   faasr_log(faasr, "User function F4 finished")
 }	
