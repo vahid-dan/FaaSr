@@ -159,7 +159,9 @@ faasr_workflow <- function(faasr){
 	}
 	# do dfs starting with function invoke.
 	dfs(faasr$FunctionInvoke, faasr$FunctionInvoke)
-	
+}
+
+faasr_predecessors_list<- function(faasr){
 	# find the predecessors and add them to the list "pre" 
 	for (func in names(faasr$FunctionList)){
 		if (faasr$FunctionInvoke %in% graph[[func]]){
