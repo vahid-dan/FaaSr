@@ -40,7 +40,8 @@ faasr_start <- function(faasr_payload) {
 	  #cat('{\"msg\":\"invalid Invocation ID\"}')
           #stop()}
   
-  pre <- faasr_workflow(faasr)
+  faasr_workflow(faasr)
+  pre<-faasr_predecessors_list(faasr)
   faasr_check(faasr, pre)
 	
   # Now extract the name of the user-provided function to invoke
