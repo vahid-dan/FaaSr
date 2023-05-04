@@ -268,7 +268,7 @@ faasr_trigger <- function(faasr) {
       } else {
         cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}')
       }
-       } else { NULL }
+
         
        # if GitHub Actions - use GH Actions
        if (next_server_type=="GitHubActions"){ NULL
