@@ -15,6 +15,8 @@ library("aws.s3")
 library("RCurl")
 library("httr")
 library("uuid")
+# AWS SDK
+library("paws")
 
 # faasr_start is the function that starts execution of the user-supplied function
 # faasr_start is the entry point invoked by the FaaS platform (e.g. OpenWhisk, Lambda, GH Actions) when a container starts
@@ -103,6 +105,7 @@ faasr_get_user_function_args <- function(faasr) {
   
   # Now extract the arguments for this function
   args = faasr$FunctionList[[user_function]]$Arguments
+  return(args)
 }
 
 faasr_put_file <- function(faasr, server_name, local_folder, local_file, remote_folder, remote_file) {
@@ -120,7 +123,7 @@ faasr_put_file <- function(faasr, server_name, local_folder, local_file, remote_
   put_file_s3 <- paste0(remote_folder, "/", remote_file)
   
   # TBD prepare env variables for S3 access
-  Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region)
+  Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
   
   # TBD use aws.s3 to put data into the server
   put_object(file=put_file, object=put_file_s3, bucket=target_s3$Bucket)
@@ -143,7 +146,7 @@ faasr_get_file <- function(faasr, server_name, remote_folder, remote_file, local
   get_file_s3 <- paste0(remote_folder, "/", remote_file)
 	
   # TBD prepare env variables for S3 access
-  Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region)
+  Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
   
   # TBD use aws.s3 to get data from the server	
   save_object(get_file_s3, file=get_file, bucket=target_s3$Bucket)
@@ -166,7 +169,7 @@ faasr_log <- function(faasr,log_message) {
 	
   # TBD prepare env variables for S3 access
   log_server <- faasr$DataStores[[log_server_name]]
-  Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region)
+  Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region, "AWS_SESSION_TOKEN" = "")
   
   # TBD set file name to be "faasr_log_" + faasr$InvocationID + ".txt"
   log_file <- paste0(faasr$InvocationID, "/", faasr$FunctionInvoke,".txt")
@@ -244,8 +247,27 @@ faasr_trigger <- function(faasr) {
       
 	    
        # if Lambda - use Lambda API
-       if (next_server_type=="Lambda"){ NULL
-        
+       if (next_server_type=="Lambda"){
+        target_server <- faasr$ComputeServers[[next_server]]
+        # when run in aws lambda, should not set env in code, lambda produce temporary key
+        Sys.setenv("AWS_ACCESS_KEY_ID"=target_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_server$SecretKey, "AWS_DEFAULT_REGION"=target_server$Region, "AWS_SESSION_TOKEN" = "")
+        payload_json <- toJSON(faasr, auto_unbox = TRUE)
+        # Create a paws Lambda client
+        lambda <- paws::lambda()
+		# Invoke f2 from f1
+        response <- lambda$invoke(
+          FunctionName = faasr$FunctionInvoke,
+          Payload = payload_json
+        )
+        # Check the response
+        if (response$StatusCode == 200) {
+          cat("Successfully invoked:", faasr$FunctionInvoke, "\n")
+        } else {
+          cat("Error invoking: ",faasr$FunctionInvoke," reason:", response$StatusCode, "\n")
+        }
+      } else {
+        cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}')
+      }
        } else { NULL }
         
        # if GitHub Actions - use GH Actions
