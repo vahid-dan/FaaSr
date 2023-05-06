@@ -42,7 +42,7 @@ faasr_start <- function(faasr_payload) {
 	  #cat('{\"msg\":\"invalid Invocation ID\"}')
           #stop()}
   
-  graph<-faasr_workflow(faasr)
+  graph<-faasr_check_workflow_cycle(faasr)
   pre<-faasr_predecessors_list(faasr, graph)
   faasr_check(faasr, pre)
 	
@@ -369,7 +369,7 @@ faasr_rsm <- function(faasr){
 
 	while(TRUE){
 		put_object("T", flag_name, target_s3$Bucket)
-		if(faasr_ANYONE_ELSE_INTERESTED(faasr, target_s3, flag_path, flag_name)){
+		if(faasr_anyone_else_interested(faasr, target_s3, flag_path, flag_name)){
 			delete_object(flag_name, target_s3$Bucket)
 		}else{ 
 			if (object_exists(lock_name, target_s3$Bucket)){
@@ -388,7 +388,7 @@ faasr_rsm <- function(faasr){
 
 
 # Anyone_else_interested implementation
-faasr_ANYONE_ELSE_INTERESTED <- function(faasr, target_s3, flag_path, flag_name){
+faasr_anyone_else_interested <- function(faasr, target_s3, flag_path, flag_name){
 	pool <- get_bucket_df(target_s3$Bucket,prefix=flag_path)
 	if (flag_name %in% pool$Key && length(pool$Key)==1){
 		return(FALSE)
@@ -402,7 +402,7 @@ faasr_ANYONE_ELSE_INTERESTED <- function(faasr, target_s3, flag_path, flag_name)
 
 # workflow implementation - check loop iteratively, predecessors.
 # TBD check unreachable
-faasr_workflow <- function(faasr){
+faasr_check_workflow_cycle <- function(faasr){
 	
 	# build empty lists for the graph and predecessors.
 	graph <- list()
