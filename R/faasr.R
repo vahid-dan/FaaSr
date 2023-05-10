@@ -297,7 +297,7 @@ faasr_release<-function(faasr){
 	lock_name <- paste0(faasr$InvocationID,"/",faasr$FunctionInvoke,"./lock")
 	target_s3 <- faasr$LoggingServer
 	target_s3 <- faasr$DataStores[[target_s3]]
-	Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region)
+	Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
 	# delete the file named ".lock"
 	delete_object(lock_name, target_s3$Bucket)
 }
@@ -310,7 +310,7 @@ faasr_check<-function(faasr, pre){
 	if (length(pre)>1){
 		log_server_name = faasr$LoggingServer
 		log_server <- faasr$DataStores[[log_server_name]]
-		Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region)
+		Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region, "AWS_SESSION_TOKEN" = "")
 		
 		#check all "predecessorname.done" exists. If TRUE, it passes, elif FALSE, it stops
 		for (func in pre){
@@ -365,7 +365,7 @@ faasr_rsm <- function(faasr){
 
 	target_s3 <- faasr$LoggingServer
 	target_s3 <- faasr$DataStores[[target_s3]]
-	Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region)
+	Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
 
 	while(TRUE){
 		put_object("T", flag_name, target_s3$Bucket)
@@ -389,6 +389,9 @@ faasr_rsm <- function(faasr){
 
 # Anyone_else_interested implementation
 faasr_anyone_else_interested <- function(faasr, target_s3, flag_path, flag_name){
+        # get_bucket_df function may have Compatibility problem for some region (us-east-2, ca-central-1.., working in these regions may have error ) 
+	# which the bucket object "Owner" part does not have "DisplayName", just have "ID" value.
+	# alternative package: may use "paws" library list_objects_v2 function
 	pool <- get_bucket_df(target_s3$Bucket,prefix=flag_path)
 	if (flag_name %in% pool$Key && length(pool$Key)==1){
 		return(FALSE)
