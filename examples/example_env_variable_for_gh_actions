@@ -1,0 +1,79 @@
+{
+"FunctionInvoke": "F1",
+"InvocationID": "",
+"LoggingServer":"S3_A",
+"FunctionList":{
+        "F1":{
+                "FaaSServer":"ow_A",
+                "Actionname":"faasr",
+                "Arguments":{
+                        "input1":"input1.csv",
+                        "input2":"input2.csv",
+                        "output":"output1.csv"
+                },
+                "InvokeNext":["F3","F2"]
+        },
+        "F2":{
+                "FaaSServer":"ow_A",
+                "Actionname":"faasr",
+                "Arguments":{
+                        "input1":"input1.csv",
+                        "input2":"output1.csv",
+                        "output":"output2.csv"
+                },
+                "InvokeNext":["F4"]
+        },
+        "F3":{
+                "FaaSServer":"ow_A",
+                "Actionname":"faasr",
+                "Arguments":{
+                        "input1":"input2.csv",
+                        "input2":"output1.csv",
+                        "output":"output3.csv"
+                },
+                "InvokeNext":["F4"]
+        },
+        "F4":{
+                "FaaSServer":"ow_A",
+                "Actionname":"faasr",
+                "Arguments":{
+                        "input1":"output2.csv",
+                        "input2":"output3.csv",
+                        "output":"output4.csv"
+                }
+        }
+},
+"ComputeServers":{
+        "ow_A":{
+                "FaaSType": "OpenWhisk",
+                "Region":"us-south",
+                "Endpoint":"https://api.us-south.cf.cloud.ibm.com",
+                "Namespace":"000000000000000000000000",
+                "API.key":"000000000000000000000000"
+        },
+
+        "lambda_a":{
+                "FaaSType": "Lambda",
+                "Region":"us-east",
+                "AccessKey":"https://api.us-south.cf.cloud.aws.com",
+                "SecretKey":"Github_Secret_key_name",
+        }
+
+},
+"DataStores":{
+        "S3_A":{
+                "Endpoint":"my_s3",
+                "Protocol":"https",
+                "AccessKey":"Github_Secret_key_name",
+                "SecretKey":"Github_Secret_key_name",
+                "Bucket":"spark7-bucket-01",
+                "Region":"us-east-1",
+                "Writable":"TRUE"
+        }
+},
+"ActionContainers":{
+        "f1":"dockerhub_containerX",
+        "f2":"dockerhub_containerY",
+        "f3":"dockerhub_containerX"
+        }
+}
