@@ -243,7 +243,7 @@ faasr_trigger <- function(faasr) {
 	 data_2<-toJSON(faasr, auto_unbox=TRUE)
 	 curl_opts_2 <- list(post=TRUE, httpheader=headers_2, postfields=data_2)
 	 response_2 <- curlPerform(url=url_2, .opts=curl_opts_2)
-       } else {cat('{\"msg\":\"success_',user_function,'_next_action_',func,'will_be_executed by_',next_server_type,'\"}')}
+       } else {cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}')}
       
 	    
        # if Lambda - use Lambda API
@@ -269,12 +269,55 @@ faasr_trigger <- function(faasr) {
         cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}')
       }
 
-        
        # if GitHub Actions - use GH Actions
-       if (next_server_type=="GitHubActions"){ NULL
-        
-       } else { NULL}
-       }
+       if (next_server_type=="GitHubActions"){ 
+        #GitHub token
+        pat <- faasr$ComputeServers[[next_server]]$Token
+        # The name of the repository and the workflow file
+        username <- faasr$ComputeServers[[next_server]]$UserName
+        repo <- faasr$ComputeServers[[next_server]]$RepoName
+        workflow_file <- faasr$ComputeServers[[next_server]]$WorkflowName
+        git_ref <- faasr$ComputeServers[[next_server]]$Ref
+        input_id <- faasr$InvocationID
+        input_invokename <- faasr$FunctionInvoke
+
+        # The inputs for the workflow
+        inputs <- list(
+          ID = input_id,
+          InvokeName = input_invokename
+        )
+
+        # The URL for the API endpoint
+        url <- paste0("https://api.github.com/repos/", username, "/", repo, "/actions/workflows/", workflow_file, "/dispatches")
+
+        # The body of the POST request
+        body <- list(
+          ref = git_ref,
+          inputs = inputs
+        )
+
+        # Send the POST request
+        response <- POST(
+          url = url,
+          body = body,
+          encode = "json",
+          add_headers(
+            Authorization = paste("token", pat),
+            Accept = "application/vnd.github.v3+json",
+            "X-GitHub-Api-Version" = "2022-11-28"
+          )
+        )
+
+        if (status_code(response) == 204) {
+          cat("GitHub Action: Successfully invoked:", faasr$FunctionInvoke, "\n")
+        } else {
+          cat("GitHub Action: error happens when invoke next function\n")
+        }
+      } else { 
+        cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}')
+      }
+
+    }
    }
 }
 	
