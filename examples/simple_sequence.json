@@ -35,7 +35,7 @@
                 "FaaSType": "Lambda",
                 "Region":"us-east",
                 "AccessKey":"https://api.us-south.cf.cloud.aws.com",
-                "SecretKey":"000000000000000000000000",
+                "SecretKey":"000000000000000000000000"
         }
 
 },

@@ -1,10 +1,10 @@
 {
 "FunctionInvoke": "F1",
-"InvocationID": "0b7f133e-bdfc-4d69-842f-63b15d9e68a8",
+"InvocationID": "000",
 "LoggingServer":"S3_A",
 "FunctionList":{
         "F1":{
-                "FaaSServer":"ow_A",
+                "FaaSServer":"github_a",
                 "Actionname":"faasr",
                 "Arguments":{
                         "input1":"input1.csv",
@@ -14,7 +14,7 @@
                 "InvokeNext":["F3","F2"]
         },
         "F2":{
-                "FaaSServer":"ow_A",
+                "FaaSServer":"github_a",
                 "Actionname":"faasr",
                 "Arguments":{
                         "input1":"input1.csv",
@@ -24,7 +24,7 @@
                 "InvokeNext":["F4"]
         },
         "F3":{
-                "FaaSServer":"ow_A",
+                "FaaSServer":"github_a",
                 "Actionname":"faasr",
                 "Arguments":{
                         "input1":"input2.csv",
@@ -34,7 +34,7 @@
                 "InvokeNext":["F4"]
         },
         "F4":{
-                "FaaSServer":"ow_A",
+                "FaaSServer":"github_a",
                 "Actionname":"faasr",
                 "Arguments":{
                         "input1":"output2.csv",
@@ -44,31 +44,39 @@
         }
 },
 "ComputeServers":{
-        "ow_A":{
-                "FaaSType": "OpenWhisk",
-                "Region":"us-south",
-                "Endpoint":"https://api.us-south.cf.cloud.ibm.com",
-                "Namespace":"000000000000000000000000",
-                "API.key":"000000000000000000000000"
+        "github_a":{
+                "FaaSType": "GitHubActions",
+                "UserName":"yourGithubAccountName",
+                "RepoName":"serverless_github_action4",
+                "WorkflowName":"main-workflow.yml",
+                "Token":"GITHUB_gita_TOKEN",
+                "Ref":"main"
         },
-
         "lambda_a":{
                 "FaaSType": "Lambda",
-                "Region":"us-east",
-                "AccessKey":"https://api.us-south.cf.cloud.aws.com",
-                "SecretKey":"000000000000000000000000"
+                "Region":"us-east-2",
+                "AccessKey":"GITHUB_lambda_ACCESS_KEY",
+                "SecretKey":"GITHUB_lambda_SECRET_KEY"
         }
-
 },
 "DataStores":{
         "S3_A":{
                 "Endpoint":"my_s3",
                 "Protocol":"https",
-                "AccessKey":"000000000000000000000000",
-                "SecretKey":"000000000000000000000000",
-                "Bucket":"spark7-bucket-01",
+                "AccessKey":"GITHUB_S3_ACCESS_KEY",
+                "SecretKey":"GITHUB_S3_SECRET_KEY",
+                "Bucket":"4662-east1",
                 "Region":"us-east-1",
                 "Writable":"TRUE"
+        },
+        "S3_B":{
+            "Endpoint":"my_s3",
+            "Protocol":"https",
+            "AccessKey":"GITHUB_S3_ACCESS_KEY",
+            "SecretKey":"GITHUB_S3_SECRET_KEY",
+            "Bucket":"4662-east1",
+            "Region":"us-east-1",
+            "Writable":"TRUE"
         }
 },
 "ActionContainers":{
