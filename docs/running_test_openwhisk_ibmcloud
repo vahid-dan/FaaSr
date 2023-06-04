@@ -1,1 +1,19 @@
 TBD
+
+1. Create a Docker image
+ - Download the files in the base_docker_images folder.
+ - Create a docker image with Dockerfile. e.g., "faasr_base"
+   * it is a base image for the deployment. 
+ - Create an user docker image with the base image. e.g., "faasr_user"
+   * Adding user's R codes into the base docker image. i.e., FROM faasr_base \ ADD user's Rcodes
+ 
+2. Create a payload with keys. e.g., payload.json
+ - S3, openwhisk information required.
+
+3. Login to the IBM cloud
+
+4. Create a IBM cloud action
+ - ibmcloud fn action create faasr --docker faasr_user
+ 
+5. Invoke the action with the payload
+ - ibmcloud fn action invoke faasr --blocking --param-file payload.json
