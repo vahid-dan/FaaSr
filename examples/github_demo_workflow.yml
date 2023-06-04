@@ -1,0 +1,31 @@
+name: Run Docker Image from Docker Hub
+
+on:
+  workflow_dispatch:
+    inputs:
+      ID:
+        description: 'ID'
+        required: false
+      InvokeName:
+        description: 'FunctionInvoke'
+        required: true
+
+jobs:
+  run_docker_image:
+    runs-on: ubuntu-latest
+    env:
+      SECRET_PAYLOAD: ${{ secrets.SECRET_PAYLOAD }}
+      INPUT_ID: ${{ github.event.inputs.ID }}
+      INPUT_INVOKENAME: ${{ github.event.inputs.InvokeName }}
+      PAYLOAD_REPO: ${{ vars.PAYLOAD_REPO }}
+    steps:
+    - name: Login to DockerHub
+      uses: docker/login-action@v2 
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_SECRET }}
+
+    - name: Pull and run Docker image pass env
+      run: |
+        docker pull your_dockerhub_name/your_dockerhub_repo:tag
+        docker run -e SECRET_PAYLOAD -e INPUT_ID -e INPUT_INVOKENAME -e PAYLOAD_REPO your_dockerhub_name/your_dockerhub_repo:tag
