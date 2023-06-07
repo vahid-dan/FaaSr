@@ -1,19 +1,55 @@
-TBD
+Part 1 Create a local demo folder.
+  Step 1
+    Download base folder “openwhisk” from FaaSr/base_docker_images. Build the demo folder in local.
+    Link: https://github.com/renatof/FaaSr/tree/main/base_docker_images/openwhisk
+  Step 2
+    The structure of openwhisk demo folder in local should look like:
+    openwhisk_folder_name/
+      --Dockerfile
+      --exec.R
+      --actionproxy.py
+      --siple_sequence1.R
+      --owplatform/
+        --__init__.py
+        --knative.py
+        --openwhisk.py
+      --users/
+        --Dockerfile
+        --example.R
 
-1. Create a Docker image
- - Download the files in the base_docker_images folder.
- - Create a docker image with Dockerfile. e.g., "faasr_base"
-   * it is a base image for the deployment. 
- - Create an user docker image with the base image. e.g., "faasr_user"
-   * Adding user's R codes into the base docker image. i.e., FROM faasr_base \ ADD user's Rcodes
- 
-2. Create a payload with keys. e.g., payload.json
- - S3, openwhisk information required.
+  “simple_sequence1.R” can download from https://github.com/renatof/FaaSr/blob/main/examples/simple_sequence1.R
 
-3. Login to the IBM cloud
+Part 2 Build docker image.
+  Step 1 Build docker image: build image with the demo folder. (When building image, we can build this image with a name: your_aws_account_id /name:latest 
+         --docker build -t “name”
 
-4. Create a IBM cloud action
- - ibmcloud fn action create faasr --docker faasr_user
- 
-5. Invoke the action with the payload
- - ibmcloud fn action invoke faasr --blocking --param-file payload.json
+  Step 2 In next step, we can push image with this name to Docker Hub.
+         --docker push “name”
+
+Part 3 Create IBMcloud function and setting configurations.
+  Below is only method to create IBMcloud function: IBMcloud CLI command line.
+  Note: IBMcloud console doesn’t support the docker runtime.
+
+  Step 1 Using IBMcloud CLI command line.
+    Reference link: https://cloud.ibm.com/docs/openwhisk?topic=openwhisk-actions
+    Open a terminal window in local.
+
+  Step 2 Create a IBMcloud functions. (F1, F2, F3,and F4)
+    Enter Command: 
+      Ibmcloud fn action create “action name of each function” –docker “docker image name”
+    Note: when create F2, F3, F4, just repeat the command and replace “action name of each function” with F2, F3 or F4’s to create the function.
+
+Part 4 Test IBMcloud Functions.
+  After creating IBMcloud functions. We will use IBMcloud CLI to invoke the IBMloud function F1. 
+  Note:  we should first upload the "input1.csv" and "input2.csv" to the S3 bucket folder. 
+
+  Step 1 save the simple_sequence1.json file in local folder
+    Link: https://github.com/renatof/FaaSr/blob/main/examples/simple_sequence1.json
+
+  Step 2 In the local folder, open a terminal window, enter command line:
+    Ibmcloud fn action invoke “F1’s action name” –blocking –param-file simple_sequence1.json
+    Result will be shown on the terminal.
+
+  Step 3 to read the execution logs in detail, enter command line:
+    Ibmcloud fn activation logs “activation ID”
+    Where activation ID is shown when you invoke the action. This will return nothing if the execution was successful.
