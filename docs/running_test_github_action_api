@@ -1,0 +1,120 @@
+Part 1 Create a local demo folder.
+    Step 1
+        Download base folder “GitHub_Actions” from FaaSr/ base_docker_images. 
+        Link: https://github.com/renatof/FaaSr/tree/main/base_docker_images/GitHub_Actions
+        
+    Step 2
+        The structure of github action demo folder should look like:
+        github_actions_demo/
+        --Dockerfile
+        --app/
+             -- faasr.R
+             -- exec.R
+             -- simple_sequence1.R
+             -- FaaSr.schema.json
+
+        “faasr.R” can download from https://github.com/renatof/FaaSr/blob/main/R/faasr.R
+        “simple_sequence1.R” can download from https://github.com/renatof/FaaSr/blob/main/examples/simple_sequence1.R
+
+
+Part 2 Build docker image and push to Docker hub.
+    After creating github_actions_demo folder, we build image and push image to Docker hub.
+    Reference link: https://docs.docker.com/docker-hub/repos/create/
+
+
+Part 3 Create GitHub Action workflow and setting env variables.
+    Step 1 Create Personal Access Token
+        To use GitHub REST API to trigger workflow and get payload, we need to create a personal access token. 
+        Note: please save this token, this is the only time we see the value of this token.
+        
+        by referencing this link: https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens
+        Note: If create a "Fine-grained token", under "Repository access", we can select “All repositories” or “Only select repositories”, 
+              under "Repository permissions", select "Actions" (read and write) and "Contents" (read-only or read-and-write).
+              If create a "classic token", Under "Select scopes", we need to select “repo” and “workflow”.
+         
+         
+    Step 2 Create Workflow file.
+        Create a github repository (for example: demo_repo)
+        In this repo, under "Actions", choose “set up a workflow yourself”, 
+        copy content of "github_demo_workflow.yml" to your workflow file, 
+        update the image name in workflow file (your_dockerhub_name/your_dockerhub_repo:tag)
+        
+        "github_demo_workflow.yml" can get from link: https://github.com/renatof/FaaSr/blob/main/examples/github_demo_workflow.yml
+        
+        
+    step 3 Save the demo example_payload_for_gh_actions.json to one repo.
+        we can save the json payload in same repo or different repo in your account (for example, payload_repo).
+        
+        the format "example_payload_for_gh_actions.json" file can download from: https://github.com/renatof/FaaSr/blob/main/examples/example_payload_for_gh_actions.json
+        After download, modify the relevant “key:value” pair. 
+        
+        For “computerServers” – “github_a”, 
+            define UserName (github account name), RepoName (the repo that we create github action workflow.yml file), 
+            WorkflowName (e.g., workflow.yml), Ref (the workflow branch, main or other branch)
+        For “DataStores” part, update the S3 bucket information.
+        
+        
+    Step 4 Set github action repo secrets and variables.
+        1.	Set One Variable
+                We need to create one "Variables". In your demo_repo, Under "Settings"—select "Secrets and Variables"—select "Actions"—select "Variables".
+                Create a "New Repository Variables": PAYLOAD_REPO (i.e., the path of your json payload)
+                Use this format: {username}/{repo}/{path}
+                For example: ABC/ payload_repo/payload_for_gh_action.json
+        2.	Set Three Secrets
+                In your demo_repo, 
+                Under "Settings"—select "Secrets and Variables"—select "Actions"—select "Secrets".
+                
+                Create three Secrets:
+                (1)	DOCKERHUB_USERNAME (your docker hub account name)
+                (2)	DOCKERHUB_SECRET (your docker account secret)
+                (3)	SECRET_PAYLOAD
+                
+                For the SECRET_PAYLOAD, we will put all secrets which will be used in container to SECRET_PAYLOAD secret with json format.
+                For Example: copy following {} to your SECRET_PAYLOAD secret and modify the value.
+                {
+                    "GITHUB_lambda_ACCESS_KEY":"111111111111111",
+                    "GITHUB_lambda_SECRET_KEY":"222222222222222222222222",
+                    "GITHUB_S3_ACCESS_KEY":"your_aws_access_key_ID",
+                    "GITHUB_S3_SECRET_KEY":"your_aws_secret_access_key",
+                    "GITHUB_gita_TOKEN":"your_Github_Personal_Access_Token",
+                    "PAYLOAD_GITHUB_TOKEN":" your_Github_Personal_Access_Token"
+                }
+
+            Note:
+                 (1) The key in “SECRET_PAYLOAD” is the value of payload. json
+                       For example, in “example_payload_for_gh_actions.json”
+                          "ComputeServers":{
+                                      "github_a":{
+                                              "FaaSType": "GitHubActions",
+                                              "Token":" GITHUB_gita_TOKEN"}},
+
+                           "DataStores":{
+                                      "S3_A":{
+                                              "Endpoint":"my_s3",
+                                              "AccessKey":" GITHUB_S3_ACCESS_KEY",
+                                              "SecretKey":" GITHUB_S3_SECRET_KEY"}}
+
+                    If we set github_a "Token":" GITHUB_gita_TOKEN", 
+                    then in SECRET_PAYLOAD, the relevant pair is "GITHUB_gita_TOKEN":"1234567" (assume 1234567 is your access token)
+                    
+                   (2) Add the "PAYLOAD_GITHUB_TOKEN" in SECRETS_PAYLOAD secret, 
+                     We need to include the pair "PAYLOAD_GITHUB_TOKEN":"1234567" (assume 1234567 is your access token), 
+                     this pair will be used to GET your payload.json file when container start to run.
+                 
+                 
+Part 4 Test on GitHub
+    There are two methods --Curl or Github Console --to invoke workflow.
+    Note: we should first upload the "input1.csv" and "input2.csv" to the S3 bucket folder. 
+    
+    1. Use Github Console:
+        Go to your demo_repo, under Actions, select the workflow, select Run Workflow, enter FunctionInvoke with F1
+
+    2. Use Curl:
+        Open a terminal window, enter command:
+        curl -L \
+          -X POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer {your_personal_access_token}"\
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+        https://api.github.com/repos/{account_name}/{repo_name}/actions/workflows/{workflow_file_name}/dispatches \
+          -d '{"ref":"{main_or_other_branch}","inputs":{"InvokeName":"F1_process"}}'
