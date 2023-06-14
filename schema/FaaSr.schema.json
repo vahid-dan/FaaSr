@@ -125,7 +125,6 @@
       "patternProperties":{
         "":{"type":"array","minItems":1}
         }
-      }
     }     
   },
   "required": [ "FunctionInvoke", "LoggingServer", "FunctionList", "ComputeServers", "DataStores", "ActionContainers", "FunctionGitRepo"]
