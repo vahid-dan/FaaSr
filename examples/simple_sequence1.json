@@ -75,5 +75,10 @@
         "f1":"dockerhub_containerX",
         "f2":"dockerhub_containerY",
         "f3":"dockerhub_containerX"
-        }
+},
+"FunctionGitRepo":{
+        "f1":["https://raw.githubusercontent.com/123", "https://raw.githubusercontent.com/456"]
+        "f2":["https://raw.githubusercontent.com/789"]
+}
+        
 }
