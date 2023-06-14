@@ -69,6 +69,18 @@
                   },
             "required":["FaaSType", "Region", "AccessKey", "SecretKey"],
             "additionalProperties": false
+            },
+            {
+            "properties":{
+                  "FaaSType":{"enum":["GitHubActions"]},
+                  "Username":{"type":"string","minLength": 1},
+                  "RepoName":{"type":"string","minLength": 1},
+                  "WorkflowName":{"type":"string","minLength": 1},
+                  "Token":{"type":"string","minLength": 1},
+                  "Ref":{"type":"string","minLength": 1}
+                  },
+            "required":["FaaSType", "Username", "RepoName", "WorkflowName", "Token", "Ref"],
+            "additionalProperties": false
             }
             ]
           }
