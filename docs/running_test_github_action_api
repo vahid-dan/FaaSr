@@ -118,3 +118,45 @@ Part 4 Test on GitHub
           -H "X-GitHub-Api-Version: 2022-11-28" \
         https://api.github.com/repos/{account_name}/{repo_name}/actions/workflows/{workflow_file_name}/dispatches \
           -d '{"ref":"{main_or_other_branch}","inputs":{"InvokeName":"F1_process"}}'
+
+Part 5 Build demo repo using GitHub CLI
+    install GitHub CLI
+    reference link: https://cli.github.com/
+    Run "gh auth login" to authenticate with your GitHub account
+    reference link: https://cli.github.com/manual/gh_auth_login
+    
+    1. Build a local folder
+       in this folder
+          (1)create a ".env" file which include all secrets of repo
+             note: "SECRET_PAYLOAD" secret is json format, should not contain spaces or newlines
+             for example, in .env:
+             DOCKERHUB_USERNAME=111
+             DOCKERHUB_SECRET=222
+             SECRET_PAYLOAD={"GITHUB_gita_TOKEN":"aaaa","GITHUB_S3_ACCESS_KEY":"bbb","GITHUB_S3_SECRET_KEY":"ccc"}
+
+          (2)create ".gitignore" file, put content ".env" in it to ignore .env file
+
+          (3)create folder ".github/workflows" 
+             in 'workflows' folder, create workflow yaml files, for example: main1.yml, main2.yml
+
+
+    2. Init the repo with git
+       git init
+       git add .
+       git commit -m 'build repo'
+
+    3. Create a repo using github CLI
+       gh repo create repo_name --<private_or_public> --push --source=.
+
+    4. Set secrets and variable
+       (1) set secrets
+          gh secret set -f .env --repo account_id/repo_name
+
+       (2) set variables
+          gh variable set PAYLOAD_REPO --body "account_id/payload_repo_name/path" --repo account_id/repo_name
+
+    5. Run workflow
+       gh workflow run --repo account_id/repo_name --ref <main_or_branch> your_workflow.yml -f InvokeName=F1
+
+    6. Check workflow run status
+       gh run list --workflow=your_workflow.yml --repo account_id/repo_name
