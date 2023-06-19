@@ -1,8 +1,0 @@
-FROM spark77/faasr-j
-# sets permissions
-RUN chmod -R 755 /action
-# set workdir
-WORKDIR /lambda_runtime
-ENTRYPOINT ["/lambda_runtime/entry.sh"]
-
-CMD ["lambda_function.handler"]

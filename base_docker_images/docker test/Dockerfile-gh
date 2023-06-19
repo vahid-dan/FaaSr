@@ -1,5 +1,0 @@
-FROM spark77/faasr-k
-
-WORKDIR /action
-
-CMD ["Rscript", "exec_gh.R"]
