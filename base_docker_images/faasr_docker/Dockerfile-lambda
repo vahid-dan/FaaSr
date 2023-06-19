@@ -1,0 +1,9 @@
+FROM spark77/faasr-k
+
+RUN chmod -R 755 /action
+
+WORKDIR /lambda_runtime
+
+ENTRYPOINT ["lambda_runtime/entry.sh"]
+
+CMD ["lambda_function.handler"]

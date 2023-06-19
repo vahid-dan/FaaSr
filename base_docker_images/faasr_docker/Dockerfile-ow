@@ -1,0 +1,3 @@
+FROM spark77/faasr-k
+
+CMD ["/bin/bash","-c","cd actionProxy && python3 actionproxy.py"]
