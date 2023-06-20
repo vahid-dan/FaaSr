@@ -39,7 +39,7 @@ faasr_start <- function(faasr_payload) {
   # if InvocationID doesn't have valid form, generate a UUID 
   } else if (UUIDvalidate(faasr$InvocationID)==FALSE){faasr$InvocationID<-UUIDgenerate()}
 	  
-	  #cat('{\"msg\":\"invalid Invocation ID\"}')
+	  #cat('{\"msg\":\"invalid Invocation ID\"}', "\n")
           #stop()}
   
   graph<-faasr_check_workflow_cycle(faasr)
@@ -78,7 +78,7 @@ faasr_parse <- function(faasr_payload) {
   
   if (validate(faasr_payload)){NULL} else{
 	  log <- attr(validate(faasr_payload),"err")
-	  cat('{\"msg\":\"',log,'\"}')
+	  cat('{\"msg\":\"',log,'\"}', "\n")
 	  stop()}
 	
   faasr <- fromJSON(faasr_payload)
@@ -90,8 +90,8 @@ faasr_parse <- function(faasr_payload) {
 	  #tag <- c("schemaPath", "message")
 	  #log <- message_schema[,tag]
 	  #log_json <- toJSON(log)
-	  #cat('{\"msg\":\"',log_json,'\"}')
-	  cat('{\"msg\":\"invalid faasr payload\"}')
+	  #cat('{\"msg\":\"',log_json,'\"}', "\n")
+	  cat('{\"msg\":\"invalid faasr payload\"}', "\n")
           stop()
 	  }
 		
@@ -112,7 +112,7 @@ faasr_put_file <- function(faasr, server_name, local_folder, local_file, remote_
   # This should put a file into S3
   # TBD validate server_name exists
   if (server_name %in% names(faasr$DataStores)){NULL
-   } else{cat('{\"msg\":\"invalid logging server name\"}')
+   } else{cat('{\"msg\":\"invalid logging server name\"}', "\n")
           stop()}
 	
   # faasr is the list parsed/validated from JSON payload
@@ -135,7 +135,7 @@ faasr_get_file <- function(faasr, server_name, remote_folder, remote_file, local
   # This should get a file from S3
   # TBD validate server_name exists
   if (server_name %in% names(faasr$DataStores)){NULL
-   } else{cat('{\"msg\":\"invalid logging server name\"}')
+   } else{cat('{\"msg\":\"invalid logging server name\"}', "\n")
           stop()}
 	
   # faasr is the list parsed/validated from JSON payload
@@ -164,7 +164,7 @@ faasr_log <- function(faasr,log_message) {
   
   # TBD validate server_name exists
   if (log_server_name %in% names(faasr$DataStores)){NULL
-   } else{cat('{\"msg\":\"invalid logging server name\"}')
+   } else{cat('{\"msg\":\"invalid logging server name\"}', "\n")
           stop()}
 	
   # TBD prepare env variables for S3 access
@@ -198,7 +198,7 @@ faasr_trigger <- function(faasr) {
   invoke_next = faasr$FunctionList[[user_function]]$InvokeNext
  
   # check if the list is empty or not
-  if (length(invoke_next) == 0){cat('{\"msg\":\"success_',user_function,'\"}')} else {
+  if (length(invoke_next) == 0){cat('{\"msg\":\"success_',user_function,'\"}', "\n")} else {
     
     # TBD iterate through invoke_next and use FaaS-specific mechanisms to send trigger
     # use "for" loop to iteratively check functions in invoke_next list
@@ -212,7 +212,7 @@ faasr_trigger <- function(faasr) {
 		   
        # validate that FaaS server name exists in faasr$ComputeServers list
        if (next_server %in% names(faasr$ComputeServers)){NULL
-       } else{cat('{\"msg\":\"invalid server name\"}')
+       } else{cat('{\"msg\":\"invalid server name\"}', "\n")
                break}
        
        # check FaaSType from the named compute server
@@ -233,7 +233,7 @@ faasr_trigger <- function(faasr) {
 	 result <- content(response, as = "parsed")
 	 if (length(result$errorMessage)==0){token <- paste("Bearer",result$access_token)
 	 } else {faasr_log(faasr, result$errorMessage)
-		 cat('{\"msg\":\"unable to invoke next action\"}')
+		 cat('{\"msg\":\"unable to invoke next action\"}', "\n")
 			break}
 	 
 
@@ -243,7 +243,7 @@ faasr_trigger <- function(faasr) {
 	 data_2<-toJSON(faasr, auto_unbox=TRUE)
 	 curl_opts_2 <- list(post=TRUE, httpheader=headers_2, postfields=data_2)
 	 response_2 <- curlPerform(url=url_2, .opts=curl_opts_2)
-       } else {cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}')}
+       } else {cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}', "\n")}
       
 	    
        # if Lambda - use Lambda API
@@ -266,7 +266,7 @@ faasr_trigger <- function(faasr) {
           cat("Error invoking: ",faasr$FunctionInvoke," reason:", response$StatusCode, "\n")
         }
       } else {
-        cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}')
+        cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}', "\n")
       }
 
        # if GitHub Actions - use GH Actions
@@ -314,7 +314,7 @@ faasr_trigger <- function(faasr) {
           cat("GitHub Action: error happens when invoke next function\n")
         }
       } else { 
-        cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}')
+        cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}', "\n")
       }
 
     }
@@ -464,7 +464,7 @@ faasr_check_workflow_cycle <- function(faasr){
 	dfs <- function(start, target){
 		# find target in the graph's successor. If it matches, there's a loop
 		if (target %in% graph[[start]]){
-			cat('{\"msg\":\"function loop found\"}')
+			cat('{\"msg\":\"function loop found\"}', "\n")
 			stop()
 		}
 		# add start, marking as "visited"
