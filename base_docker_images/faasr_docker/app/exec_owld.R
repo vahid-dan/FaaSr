@@ -11,7 +11,7 @@ gits <- faasr_source$FunctionGitRepo[[actionname]]
 if (length(gits)==0){NULL} else{
 for (file in gits){
 	command <- paste("git clone --depth=1",file)
-	system(command)
+	system(command, ignore.stderr=TRUE)
 	}
 }
 	
