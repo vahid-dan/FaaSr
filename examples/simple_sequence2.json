@@ -74,17 +74,10 @@
 
 },
 "ActionContainers":{
-        "F1":"faasr/ow",
-        "F2":"faasr/ow",
-        "F3":"faasr/ow",
-	"F4":"faasr/ow",
-	"F5":"username/name"
+        "faasr":"faasr/base-tidyverse-openwhisk"
         },
 
 "FunctionGitRepo":{
-	"F1":["https://github.com/spark0510/faasr_example.git"],
-	"F2":["https://github.com/spark0510/faasr_example.git"],
-	"F3":["https://github.com/spark0510/faasr_example.git"],
-	"F4":["https://github.com/spark0510/faasr_example.git"]
+	"faasr":"https://github.com/spark0510/faasr_example.git"
 }
 }
