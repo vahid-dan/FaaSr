@@ -33,7 +33,7 @@ faasr_start <- function(faasr_payload) {
   
   # TBD fourth, need to check if there are no invocation cycles
   
-  # TBD if there is an empty InvocationID in the JSON, generate a UUID at random and add to faasr
+  # if there is an empty InvocationID in the JSON, generate a UUID at random and add to faasr
   # i.e. the first function in the invocation generates a UUID that is carried over to any others it triggers
   if (length(faasr$InvocationID)==0){faasr$InvocationID<-UUIDgenerate()
   # if InvocationID doesn't have valid form, generate a UUID 
@@ -41,61 +41,73 @@ faasr_start <- function(faasr_payload) {
 	  
 	  #cat('{\"msg\":\"invalid Invocation ID\"}', "\n")
           #stop()}
-  
+
+  # Make a DAG and Check whether it has errors e.g., infinite loop
   graph<-faasr_check_workflow_cycle(faasr)
+  # Make a list of predecessor of this function
   pre<-faasr_predecessors_list(faasr, graph)
+  # Check that this function should "wait" or "proceed", which has more than 2 predecessors. 
   faasr_check(faasr, pre)
 	
   # Now extract the name of the user-provided function to invoke
   user_function = get(faasr$FunctionInvoke)
   
-  # TBD let's do this later - need to come up with a strategy for dealing with a function that is a dependence "sink", 
-  # i.e. it depends/is triggered by multiple other functions and should only execute when the last trigger has been receive
-	
   # Invoke the user function, passing the parsed list as argument
   faasr_result <- user_function(faasr)
   
-  # mark the function invoked as "done" 	
+  # mark the function invoked as "done"
+  # Check if directory already exists. If not, create one
   if (!dir.exists(faasr$InvocationID)){dir.create(faasr$InvocationID)}
+  # file name would be "Functionname.done"
   file_name <- paste0(faasr$FunctionInvoke, ".done")
+  # Create a file named "Functionname.done" with the content string "TRUE"
   write.table("TRUE", file=paste0(faasr$InvocationID, "/", file_name), row.names=F, col.names=F)
+  # Put it into the LoggingServer(DataStore Server)
   faasr_put_file(faasr, faasr$LoggingServer, faasr$InvocationID, file_name, faasr$InvocationID, file_name)	
 	
   # Now trigger the next actions(s) if any
   faasr_trigger(faasr)
+
+  #
+  cat('{\"msg\":\"Invocation ID is',faasr$InvocationID,'\"}', "\n")
 }
 
 # faasr_parse is the function that parses and validates the JSON payload containing all configuration key/value pairs for this invocation
 faasr_parse <- function(faasr_payload) {
   # First, attempt to read JSON
-  
-  # TBD need to perform all validations here
+	
+  # Room for the different way
   # url <- "https://raw.githubusercontent.com/renatof/FaaSr/main/schema/FaaSr.schema.json"
   # faasr_schema <- readLines(url)
   # We can read the schema by using github raw contents instead of adding the schema into a docker image, however, it would make an overhead. 
-  faasr_schema <- readLines("FaaSr.schema.json")
-  faasr_schema_valid <- json_validator(faasr_schema, engine="ajv")
   
+  faasr_schema <- readLines("FaaSr.schema.json")
+  # Use json_validator: make faasr_schema_valid as a validator. ajv should be used as an engine.
+  faasr_schema_valid <- json_validator(faasr_schema, engine="ajv")
+
+  # if faasr_payload is valid json, do nothing.
   if (validate(faasr_payload)){NULL} else{
+  # Else, return error and stop.
 	  log <- attr(validate(faasr_payload),"err")
 	  cat('{\"msg\":\"',log,'\"}', "\n")
 	  stop()}
-	
+
+  # Make faasr_payload a list to parse.
   faasr <- fromJSON(faasr_payload)
-  # schema check - if it returns TRUE, returns faasr
+	
+  # schema check - if it returns TRUE, return faasr
   if (faasr_schema_valid(faasr_payload)){return(faasr)} else{
-	  #if it returns FALSE, returns 
-	  #TBD it can return 1. error msg, 2. logs from jsonvalidate.
+	  #if it returns FALSE, return an error 
+	  cat('{\"msg\":\"invalid faasr payload\"}', "\n")
+          stop()
+	  
+	  # Room for the different way: it can return 1. error msg, 2. logs from jsonvalidate.
 	  #message_schema <- attr(faasr_schema_valid(faasr_payload, verbose=TRUE, greedy=TRUE),"errors")
 	  #tag <- c("schemaPath", "message")
 	  #log <- message_schema[,tag]
 	  #log_json <- toJSON(log)
 	  #cat('{\"msg\":\"',log_json,'\"}', "\n")
-	  cat('{\"msg\":\"invalid faasr payload\"}', "\n")
-          stop()
 	  }
-		
-  # return an error if validation fails
 }
 
 faasr_get_user_function_args <- function(faasr) {
@@ -110,8 +122,9 @@ faasr_get_user_function_args <- function(faasr) {
 
 faasr_put_file <- function(faasr, server_name, local_folder, local_file, remote_folder, remote_file) {
   # This should put a file into S3
-  # TBD validate server_name exists
+  # validate server_name exists
   if (server_name %in% names(faasr$DataStores)){NULL
+  # if it doesn't exist, return an error and stop
    } else{cat('{\"msg\":\"invalid logging server name\"}', "\n")
           stop()}
 	
@@ -122,19 +135,19 @@ faasr_put_file <- function(faasr, server_name, local_folder, local_file, remote_
   put_file <- paste0(local_folder,"/",local_file)
   put_file_s3 <- paste0(remote_folder, "/", remote_file)
   
-  # TBD prepare env variables for S3 access
+  # prepare env variables for S3 access
   Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
   
-  # TBD use aws.s3 to put data into the server
+  # use aws.s3 to put data into the server
   put_object(file=put_file, object=put_file_s3, bucket=target_s3$Bucket)
-  
-  # TBD log any errors
 }
 
 faasr_get_file <- function(faasr, server_name, remote_folder, remote_file, local_folder, local_file) {
   # This should get a file from S3
-  # TBD validate server_name exists
+  # validate server_name exists
   if (server_name %in% names(faasr$DataStores)){NULL
+
+  # if it doesn't exist, return an error and stop
    } else{cat('{\"msg\":\"invalid logging server name\"}', "\n")
           stop()}
 	
@@ -150,7 +163,6 @@ faasr_get_file <- function(faasr, server_name, remote_folder, remote_file, local
   
   # TBD use aws.s3 to get data from the server	
   save_object(get_file_s3, file=get_file, bucket=target_s3$Bucket)
-  # TBD log any errors
 }
 
 faasr_log <- function(faasr,log_message) {
@@ -162,27 +174,29 @@ faasr_log <- function(faasr,log_message) {
   # extract name of logging server
   log_server_name = faasr$LoggingServer
   
-  # TBD validate server_name exists
+  # validate server_name exists
   if (log_server_name %in% names(faasr$DataStores)){NULL
+  
+  # if it doesn't exist, return an error and stop
    } else{cat('{\"msg\":\"invalid logging server name\"}', "\n")
           stop()}
 	
-  # TBD prepare env variables for S3 access
+  # prepare env variables for S3 access
   log_server <- faasr$DataStores[[log_server_name]]
   Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region, "AWS_SESSION_TOKEN" = "")
   
-  # TBD set file name to be "faasr_log_" + faasr$InvocationID + ".txt"
+  # set file name to be "faasr_log_" + faasr$InvocationID + ".txt"
   log_file <- paste0(faasr$InvocationID, "/", faasr$FunctionInvoke,".txt")
 	
-  # TBD use aws.s3 to get log file from the server
+  # use aws.s3 to get log file from the server
   if (object_exists(log_file, log_server$Bucket)) {save_object(log_file, file=log_file, bucket=log_server$Bucket)}
 	
-  # TBD append message to the local file
+  # append message to the local file
   logs <- log_message
   if (!dir.exists(faasr$InvocationID)){dir.create(faasr$InvocationID)}
   write.table(logs, log_file, col.names=FALSE, row.names = FALSE, append=TRUE, quote=FALSE)
 	
-  # TBD use aws.s3 to put log file back into server
+  # use aws.s3 to put log file back into server
   put_object(file=log_file, object=log_file, bucket=log_server$Bucket)
 	
 }
@@ -220,29 +234,57 @@ faasr_trigger <- function(faasr) {
       
        # if OpenWhisk - use OpenWhisk API to send trigger
        if (next_server_type=="OpenWhisk"){ 
+	 # Set the env values for the openwhisk action.
          api_key <- faasr$ComputeServers[[next_server]]$API.key
 	 region <- faasr$ComputeServers[[next_server]]$Region
 	 namespace <- faasr$ComputeServers[[next_server]]$Namespace
 	 actionname <- faasr$FunctionList[[invoke_next_function]]$Actionname
 		
 	 #Openwhisk - Get a token by using the API key
+	 # URL is the ibmcloud's iam center.
 	 url <- "https://iam.cloud.ibm.com/identity/token"
+	       
+	 # Body contains authorization type and api key
 	 body <- list(grant_type = "urn:ibm:params:oauth:grant-type:apikey",apikey=api_key)
+
+	 # Header is HTTR request's header.
 	 headers <- c("Content-Type"="application/x-www-form-urlencoded")
+
+	 # Use httr::POST to send the POST request to the IBMcloud iam centers to get a token.
 	 response <- POST(url = url,body = body,encode = "form",add_headers(.headers = headers))
+
+	 # Parse the result to get a token.
 	 result <- content(response, as = "parsed")
+
+	 # if result returns no error(length is 0), define token.
 	 if (length(result$errorMessage)==0){token <- paste("Bearer",result$access_token)
+
+	 # if result returns an error, return an error message and stop.				     
 	 } else {faasr_log(faasr, result$errorMessage)
-		 cat('{\"msg\":\"unable to invoke next action\"}', "\n")
+		 cat('{\"msg\":\"unable to invoke next action, authentication error\"}', "\n")
 			break}
 	 
 
 	 #Openwhisk - Invoke next action - action name should be described.
+	 # Reference: https://cloud.ibm.com/apidocs/functions
+	 # URL is a form of "https://region.functions.cloud.ibm.cloud/api/v1/namespaces/namespace/actions/actionname",
+	 
+	 # blocking=TRUE&result=TRUE is optional
 	 url_2<- paste0("https://",region,".functions.cloud.ibm.com/api/v1/namespaces/",namespace,"/actions/",actionname,"?blocking=true&result=true")
+	       
+	 # header is HTTR request headers      
 	 headers_2 <- c("accept"="application/json", "authorization"=token, "content-type"="application/json")
+	       
+	 # data is a body and it should be a JSON. To pass the payload, toJSON is required.
 	 data_2<-toJSON(faasr, auto_unbox=TRUE)
+	       
+	 # Make one option for invoking RCurl
 	 curl_opts_2 <- list(post=TRUE, httpheader=headers_2, postfields=data_2)
+	       
+	 # Perform RCurl::curlPerform to send the POST request to IBMcloud function server.
 	 response_2 <- curlPerform(url=url_2, .opts=curl_opts_2)
+	       
+       # if next action's server is not Openwhisk, it returns a message about the next function.
        } else {cat('{\"msg\":\"success_',user_function,'_next_action_',invoke_next_function,'will_be_executed by_',next_server_type,'\"}', "\n")}
       
 	    
@@ -323,12 +365,16 @@ faasr_trigger <- function(faasr) {
 	
 #lock implementation - acquire
 faasr_acquire<-function(faasr){
+	# Call faasr_rsm to get a lock, faasr_rsm returns either TRUE or FALSE
 	Lock<-faasr_rsm(faasr)
+	
 	#if function acquires a lock, it gets out of the loop
 	while(TRUE){
+		# if Lock is TRUE i.e., this function has a lock, return TRUE i.e., get out of the While loop
 		if (Lock){return(TRUE)}else
 		{
-		#if it doesn't, keep trying to get the flag&lock
+			
+		#if it doesn't, keep trying to get the flag&lock by calling faasr_rsm again until it returns TRUE.
 		Lock<-faasr_rsm(faasr)
 		}
 	}
@@ -337,10 +383,12 @@ faasr_acquire<-function(faasr){
 
 # lock implementation - release
 faasr_release<-function(faasr){
+	# Set env for locks.
 	lock_name <- paste0(faasr$InvocationID,"/",faasr$FunctionInvoke,"./lock")
 	target_s3 <- faasr$LoggingServer
 	target_s3 <- faasr$DataStores[[target_s3]]
 	Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
+	
 	# delete the file named ".lock"
 	delete_object(lock_name, target_s3$Bucket)
 }
@@ -349,17 +397,25 @@ faasr_release<-function(faasr){
 
 # "waiting" implementation
 faasr_check<-function(faasr, pre){
-	#if predecessors are more 2, it gets through codes below, if not, just pass this
+	#if predecessors are more 2, it gets through codes below, if not (0 or 1 predecessor), just pass this
 	if (length(pre)>1){
+
+		# Set env for checking
 		log_server_name = faasr$LoggingServer
 		log_server <- faasr$DataStores[[log_server_name]]
 		Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region, "AWS_SESSION_TOKEN" = "")
 		
 		#check all "predecessorname.done" exists. If TRUE, it passes, elif FALSE, it stops
 		for (func in pre){
+			
+			# check filename is "functionname.done"
 			file_names <- paste0(faasr$InvocationID,"/",func,".done") 
+
+			# if object exists, do nothing.
 			if (object_exists(file_names, log_server$Bucket)){
 				NULL
+			
+			# if object doesn't exist, leave a log that this function should wait and will be discarded
 			} else{
 				faasr_log(faasr, "error:function should wait")
 				stop()
@@ -368,9 +424,12 @@ faasr_check<-function(faasr, pre){
 		
 		# put random number into the file named "function.candidate"
 		random_number <- sample(1:10000, 1)
+
+		# Check whether directory exists, if not, create one.
 		if (!dir.exists(faasr$InvocationID)){dir.create(faasr$InvocationID)}
 		file_names <- paste0(faasr$InvocationID,"/",faasr$FunctionInvoke,".candidate")
-		
+
+		# Below is to avoid the race condition
 		# acquire a Lock
 		faasr_acquire(faasr)
 		
@@ -378,9 +437,11 @@ faasr_check<-function(faasr, pre){
 		if (object_exists(file_names, log_server$Bucket)){
 			save_object(file_names, file=file_names, bucket=log_server$Bucket)
 		}
+		
 		# append random number to the file / put it back to the s3 bucket 
 		write.table(random_number, file_names, col.names=FALSE, row.names = FALSE, append=TRUE, quote=FALSE)
 		put_object(file=file_names, object=file_names, bucket=log_server$Bucket)
+		
 		# save it to the local, again
 		save_object(file_names, file=file_names, bucket=log_server$Bucket)
 
@@ -391,6 +452,7 @@ faasr_check<-function(faasr, pre){
 		if (as.character(random_number) == readLines(file_names,1)){
 			NULL
 			}else{
+			cat('{\"msg\":\"Number does not match\"}', "\n")
 			stop()
 			}
 
@@ -401,24 +463,38 @@ faasr_check<-function(faasr, pre){
 
 # Read-Set Memory implementation
 faasr_rsm <- function(faasr){
+	# Set env for flag and lock
 	flag_content <- as.character(sample(1:1000,1))
 	flag_path <- paste0(faasr$InvocationID,"/",faasr$FunctionInvoke,"/flag/")
 	flag_name <- paste0(flag_path,flag_content)
 	lock_name <- paste0(faasr$InvocationID,"/",faasr$FunctionInvoke,"./lock")
 
+	# Set env for the storage.
 	target_s3 <- faasr$LoggingServer
 	target_s3 <- faasr$DataStores[[target_s3]]
 	Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
 
+	# Make a loop
 	while(TRUE){
+		# Put a object named "functionname/flag" with the content "T" into the S3 bucket
 		put_object("T", flag_name, target_s3$Bucket)
+
+		# if someone has a flag i.e.,faasr_anyone_else_interested returns TRUE, delete_flag and try again.
 		if(faasr_anyone_else_interested(faasr, target_s3, flag_path, flag_name)){
 			delete_object(flag_name, target_s3$Bucket)
+
+		# if nobody has a flag i.e.,faasr_anyone_else_interested returns FALSE, check the lock condition.
 		}else{ 
+
+			# if ".lock" exists in the bucket, return FALSE, and try all over again.
 			if (object_exists(lock_name, target_s3$Bucket)){
 				return(FALSE)
+
+			# if ".lock" does not exist, make a new lock with the content of flag_content
 			}else{
 				put_object(flag_content, lock_name, target_s3$Bucket)
+
+				# release the flag and get out of the while loop
 				delete_object(flag_name, target_s3$Bucket)
 				return(TRUE)	
 			}
@@ -435,7 +511,10 @@ faasr_anyone_else_interested <- function(faasr, target_s3, flag_path, flag_name)
         # get_bucket_df function may have Compatibility problem for some region (us-east-2, ca-central-1.., working in these regions may have error ) 
 	# which the bucket object "Owner" part does not have "DisplayName", just have "ID" value.
 	# alternative package: may use "paws" library list_objects_v2 function
+	# pool is a list of flag names
 	pool <- get_bucket_df(target_s3$Bucket,prefix=flag_path)
+	
+	# if this function sets the flag and it is the only flag, return FALSE, if not, return TRUE
 	if (flag_name %in% pool$Key && length(pool$Key)==1){
 		return(FALSE)
 	}else{
@@ -462,24 +541,30 @@ faasr_check_workflow_cycle <- function(faasr){
 	stack <- list()
 	# implement dfs - recursive function
 	dfs <- function(start, target){
+		
 		# find target in the graph's successor. If it matches, there's a loop
 		if (target %in% graph[[start]]){
 			cat('{\"msg\":\"function loop found\"}', "\n")
 			stop()
 		}
+		
 		# add start, marking as "visited"
 		stack <<- c(stack, start)
 		
 		# set one of the successors as another "start"
 		for (func in graph[[start]]){
+			
 			# if new "start" has been visited, do nothing
 			if (func %in% stack){
 				NULL
+
+			# if not, keep checking the DAG.
 			} else {
 				dfs(func, target)
 			}
 		}
 	}
+	
 	# do dfs starting with function invoke.
 	dfs(faasr$FunctionInvoke, faasr$FunctionInvoke)
 	return(graph)
