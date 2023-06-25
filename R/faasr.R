@@ -290,18 +290,25 @@ faasr_trigger <- function(faasr) {
 	    
        # if Lambda - use Lambda API
        if (next_server_type=="Lambda"){
+	# get next function server
         target_server <- faasr$ComputeServers[[next_server]]
-        # when run in aws lambda, should not set env in code, lambda produce temporary key
+        
+	# prepare env variables for lambda
         Sys.setenv("AWS_ACCESS_KEY_ID"=target_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_server$SecretKey, "AWS_DEFAULT_REGION"=target_server$Region, "AWS_SESSION_TOKEN" = "")
-        payload_json <- toJSON(faasr, auto_unbox = TRUE)
-        # Create a paws Lambda client
+        
+	# set invoke request body, it should be a JSON. To pass the payload, toJSON is required.
+	payload_json <- toJSON(faasr, auto_unbox = TRUE)
+        
+	# Create a Lambda client using paws
         lambda <- paws::lambda()
-		# Invoke f2 from f1
+	
+	# Invoke next function with FunctionName and Payload, receive trigger response
         response <- lambda$invoke(
           FunctionName = faasr$FunctionInvoke,
           Payload = payload_json
         )
-        # Check the response
+        
+	# Check if next function be invoked successfully
         if (response$StatusCode == 200) {
           cat("Successfully invoked:", faasr$FunctionInvoke, "\n")
         } else {
@@ -313,13 +320,14 @@ faasr_trigger <- function(faasr) {
 
        # if GitHub Actions - use GH Actions
        if (next_server_type=="GitHubActions"){ 
-        #GitHub token
+        # Set env values for GitHub Actions event
         pat <- faasr$ComputeServers[[next_server]]$Token
-        # The name of the repository and the workflow file
         username <- faasr$ComputeServers[[next_server]]$UserName
         repo <- faasr$ComputeServers[[next_server]]$RepoName
         workflow_file <- faasr$ComputeServers[[next_server]]$WorkflowName
         git_ref <- faasr$ComputeServers[[next_server]]$Ref
+	
+	# Set inputs for the workflow trigger event with InvocationID and Next_Invoke_Function_Name
         input_id <- faasr$InvocationID
         input_invokename <- faasr$FunctionInvoke
 
@@ -329,16 +337,17 @@ faasr_trigger <- function(faasr) {
           InvokeName = input_invokename
         )
 
-        # The URL for the API endpoint
+        # Set the URL for the REST API endpoint of next action
         url <- paste0("https://api.github.com/repos/", username, "/", repo, "/actions/workflows/", workflow_file, "/dispatches")
 
-        # The body of the POST request
+        # Set the body of the POST request with github ref and inputs
         body <- list(
           ref = git_ref,
           inputs = inputs
         )
 
-        # Send the POST request
+        # Use httr::POST to send the POST request
+	# Reference link for POST request: https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28
         response <- POST(
           url = url,
           body = body,
@@ -349,7 +358,8 @@ faasr_trigger <- function(faasr) {
             "X-GitHub-Api-Version" = "2022-11-28"
           )
         )
-
+        
+	# Check if next action be invoked successfully 
         if (status_code(response) == 204) {
           cat("GitHub Action: Successfully invoked:", faasr$FunctionInvoke, "\n")
         } else {
