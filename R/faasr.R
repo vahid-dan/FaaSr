@@ -32,15 +32,6 @@ faasr_start <- function(faasr_payload) {
   # TBD third, need to check if the rest of the JSON payload is correctly configured - for anything incorrect, use faasr_log to log to S3, and then return an error
   
   # TBD fourth, need to check if there are no invocation cycles
-  
-  # if there is an empty InvocationID in the JSON, generate a UUID at random and add to faasr
-  # i.e. the first function in the invocation generates a UUID that is carried over to any others it triggers
-  if (length(faasr$InvocationID)==0){faasr$InvocationID<-UUIDgenerate()
-  # if InvocationID doesn't have valid form, generate a UUID 
-  } else if (UUIDvalidate(faasr$InvocationID)==FALSE){faasr$InvocationID<-UUIDgenerate()}
-	  
-	  #cat('{\"msg\":\"invalid Invocation ID\"}', "\n")
-          #stop()}
 
   # Make a DAG and Check whether it has errors e.g., infinite loop
   graph<-faasr_check_workflow_cycle(faasr)
@@ -48,7 +39,7 @@ faasr_start <- function(faasr_payload) {
   pre<-faasr_predecessors_list(faasr, graph)
   # Check that this function should "wait" or "proceed", which has more than 2 predecessors. 
   faasr_check(faasr, pre)
-	
+
   # Now extract the name of the user-provided function to invoke
   user_function = get(faasr$FunctionInvoke)
   
@@ -408,6 +399,21 @@ faasr_release<-function(faasr){
 # "waiting" implementation
 faasr_check<-function(faasr, pre){
 	#if predecessors are more 2, it gets through codes below, if not (0 or 1 predecessor), just pass this
+	if (length(pre)==0){
+		if (length(faasr$InvocationID)==0){faasr$InvocationID<-UUIDgenerate()
+  		# if InvocationID doesn't have valid form, generate a UUID 
+  		} else if (UUIDvalidate(faasr$InvocationID)==FALSE){faasr$InvocationID<-UUIDgenerate()}
+
+		target_s3 <- faasr$LoggingServer
+		target_s3 <- faasr$DataStores[[target_s3]]
+		Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
+		idfolder <- paste0(faasr$InvocationID, "/")
+		
+		if (object_exists(idfolder, target_s3$Bucket)){
+			cat('{\"msg\":\"InvocationID already exists\"}', "\n")
+			stop()
+		} else { put_folder(faasr$InvocationID, bucket=target_s3$Bucket) }
+	
 	if (length(pre)>1){
 
 		# Set env for checking
