@@ -48,13 +48,14 @@ faasr_start <- function(faasr_payload) {
   
   # mark the function invoked as "done"
   # Check if directory already exists. If not, create one
-  if (!dir.exists(faasr$InvocationID)){dir.create(faasr$InvocationID)}
+  log_folder<-paste0("FaaSrLogs/",faasr$InvocationID)
+  if (!dir.exists(log_folder)){dir.create(log_folder, recursive=TRUE)}
   # file name would be "Functionname.done"
   file_name <- paste0(faasr$FunctionInvoke, ".done")
   # Create a file named "Functionname.done" with the content string "TRUE"
-  write.table("TRUE", file=paste0(faasr$InvocationID, "/", file_name), row.names=F, col.names=F)
+  write.table("TRUE", file=paste0(log_folder, "/", file_name), row.names=F, col.names=F)
   # Put it into the LoggingServer(DataStore Server)
-  faasr_put_file(faasr, faasr$LoggingServer, faasr$InvocationID, file_name, faasr$InvocationID, file_name)	
+  faasr_put_file(faasr, faasr$LoggingServer, log_folder, file_name, log_folder, file_name)	
 	
   # Now trigger the next actions(s) if any
   faasr_trigger(faasr)
@@ -127,10 +128,18 @@ faasr_put_file <- function(faasr, server_name, local_folder, local_file, remote_
   put_file_s3 <- paste0(remote_folder, "/", remote_file)
   
   # prepare env variables for S3 access
-  Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
-  
+  #Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
+  s3<-paws::s3(
+	  config=list(
+		  credentials=list(
+			  creds=list(
+				  access_key_id=target_s3$AccessKey,
+				  secret_access_key=target_s3$SecretKey)),
+		  region=target_s3$Region)
+	  )
   # use aws.s3 to put data into the server
-  put_object(file=put_file, object=put_file_s3, bucket=target_s3$Bucket)
+  #put_object(file=put_file, object=put_file_s3, bucket=target_s3$Bucket)
+  result<-s3$put_object(Body=put_file, Key=put_file_s3, Bucket=target_s3$Bucket)	
 }
 
 faasr_get_file <- function(faasr, server_name, remote_folder, remote_file, local_folder, local_file) {
@@ -148,12 +157,22 @@ faasr_get_file <- function(faasr, server_name, remote_folder, remote_file, local
   target_s3 <- faasr$DataStores[[server_name]]
   get_file <- paste0(local_folder,"/",local_file)
   get_file_s3 <- paste0(remote_folder, "/", remote_file)
+  if (!dir.exists(local_folder)){dir.create(local_folder, recursive=TRUE)}
 	
   # TBD prepare env variables for S3 access
-  Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
-  
+  #Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
+  s3<-paws::s3(
+	  config=list(
+		  credentials=list(
+			  creds=list(
+				  access_key_id=target_s3$AccessKey,
+				  secret_access_key=target_s3$SecretKey)),
+		  region=target_s3$Region)
+	  )
   # TBD use aws.s3 to get data from the server	
-  save_object(get_file_s3, file=get_file, bucket=target_s3$Bucket)
+  #save_object(get_file_s3, file=get_file, bucket=target_s3$Bucket)
+  if (file.exists(get_file)){file.remove(get_file)}
+  result<-s3$download_file(Key=get_file_s3, Filename=get_file, Bucket=target_s3$Bucket)
 }
 
 faasr_log <- function(faasr,log_message) {
@@ -174,22 +193,34 @@ faasr_log <- function(faasr,log_message) {
 	
   # prepare env variables for S3 access
   log_server <- faasr$DataStores[[log_server_name]]
-  Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region, "AWS_SESSION_TOKEN" = "")
-  
+  #Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region, "AWS_SESSION_TOKEN" = "")
+  s3<-paws::s3(
+	  config=list(
+		  credentials=list(
+			  creds=list(
+				  access_key_id=log_server$AccessKey,
+				  secret_access_key=log_server$SecretKey)),
+		  region=log_server$Region)
+	  )
   # set file name to be "faasr_log_" + faasr$InvocationID + ".txt"
-  log_file <- paste0(faasr$InvocationID, "/", faasr$FunctionInvoke,".txt")
+  log_folder <- paste0("FaaSrLogs/", faasr$InvocationID)
+  log_file <- paste0(log_folder, "/", faasr$FunctionInvoke,".txt")	
+  if (!dir.exists(log_folder)){dir.create(log_folder, recursive=TRUE)}
 	
   # use aws.s3 to get log file from the server
-  if (object_exists(log_file, log_server$Bucket)) {save_object(log_file, file=log_file, bucket=log_server$Bucket)}
+  #if (object_exists(log_file, log_server$Bucket)) {save_object(log_file, file=log_file, bucket=log_server$Bucket)}
+  check_log_file <- s3$list_objects_v2(Bucket=log_server$Bucket, Prefix=log_file)
+  if(length(check_log_file$Contents)!=0){
+	  if (file.exists(log_file)){file.remove(log_file)}
+	  s3$download_file(Bucket=log_server$Bucket, Key=log_file, Filename=log_file)}
 	
   # append message to the local file
   logs <- log_message
-  if (!dir.exists(faasr$InvocationID)){dir.create(faasr$InvocationID)}
   write.table(logs, log_file, col.names=FALSE, row.names = FALSE, append=TRUE, quote=FALSE)
 	
   # use aws.s3 to put log file back into server
-  put_object(file=log_file, object=log_file, bucket=log_server$Bucket)
-	
+  #put_object(file=log_file, object=log_file, bucket=log_server$Bucket)
+  s3$put_object(Body=log_file, Key=log_file, Bucket=log_server$Bucket)	
 }
 
 faasr_trigger <- function(faasr) {
@@ -261,7 +292,7 @@ faasr_trigger <- function(faasr) {
 	 # URL is a form of "https://region.functions.cloud.ibm.cloud/api/v1/namespaces/namespace/actions/actionname",
 	 
 	 # blocking=TRUE&result=TRUE is optional
-	 url_2<- paste0("https://",region,".functions.cloud.ibm.com/api/v1/namespaces/",namespace,"/actions/",actionname,"?blocking=true&result=true")
+	 url_2<- paste0("https://",region,".functions.cloud.ibm.com/api/v1/namespaces/",namespace,"/actions/",actionname,"?blocking=false&result=false")
 	       
 	 # header is HTTR request headers      
 	 headers_2 <- c("accept"="application/json", "authorization"=token, "content-type"="application/json")
@@ -385,13 +416,21 @@ faasr_acquire<-function(faasr){
 # lock implementation - release
 faasr_release<-function(faasr){
 	# Set env for locks.
-	lock_name <- paste0(faasr$InvocationID,"/",faasr$FunctionInvoke,"./lock")
+	lock_name <- paste0("FaaSrLogs/", faasr$InvocationID,"/",faasr$FunctionInvoke,"./lock")
 	target_s3 <- faasr$LoggingServer
 	target_s3 <- faasr$DataStores[[target_s3]]
-	Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
-	
+	#Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
+	s3<-paws::s3(
+	config=list(
+		credentials=list(
+			creds=list(
+				access_key_id=target_s3$AccessKey,
+				secret_access_key=target_s3$SecretKey)),
+		region=target_s3$Region)
+	)
 	# delete the file named ".lock"
-	delete_object(lock_name, target_s3$Bucket)
+	#delete_object(lock_name, target_s3$Bucket)
+	s3$delete_object(Key=lock_name, Bucket=target_s3$Bucket)
 }
 
 
@@ -407,32 +446,60 @@ faasr_check<-function(faasr, pre){
 		target_s3 <- faasr$LoggingServer
 		target_s3 <- faasr$DataStores[[target_s3]]
 		Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
-		idfolder <- paste0(faasr$InvocationID, "/")
+		s3<-paws::s3(
+	  		config=list(
+		  		credentials=list(
+			  		creds=list(
+				  		access_key_id=target_s3$AccessKey,
+				  		secret_access_key=target_s3$SecretKey)),
+		  		region=target_s3$Region)
+	  	)
 		
-		if (object_exists(idfolder, target_s3$Bucket)){
+		idfolder <- paste0("FaaSrLogs/",faasr$InvocationID, "/")
+
+		check_UUIDfolder<-s3$list_objects_v2(Prefix=idfolder, Bucket=target_s3$Bucket)
+		#if (object_exists(idfolder, target_s3$Bucket)){
+		#	cat('{\"msg\":\"InvocationID already exists\"}', "\n")
+		#	stop()
+		#} else { put_folder(faasr$InvocationID, bucket=target_s3$Bucket) }
+		if (length(check_UUIDfolder$Contents)!=0){
 			cat('{\"msg\":\"InvocationID already exists\"}', "\n")
 			stop()
-		} else { put_folder(faasr$InvocationID, bucket=target_s3$Bucket) }
-	
+		}else{s3$put_object(Key=idfolder, Bucket=target_s3$Bucket)}	
+		
+		
 	if (length(pre)>1){
 
 		# Set env for checking
 		log_server_name = faasr$LoggingServer
 		log_server <- faasr$DataStores[[log_server_name]]
-		Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region, "AWS_SESSION_TOKEN" = "")
+		#Sys.setenv("AWS_ACCESS_KEY_ID"=log_server$AccessKey, "AWS_SECRET_ACCESS_KEY"=log_server$SecretKey, "AWS_DEFAULT_REGION"=log_server$Region, "AWS_SESSION_TOKEN" = "")
+		s3<-paws::s3(
+	  		config=list(
+		  		credentials=list(
+			  		creds=list(
+				  		access_key_id=log_server$AccessKey,
+				  		secret_access_key=log_server$SecretKey)),
+		  		region=log_server$Region)
+	  	)
+		
+		idfolder <- paste0("FaaSrLogs/",faasr$InvocationID, "/")
 		
 		#check all "predecessorname.done" exists. If TRUE, it passes, elif FALSE, it stops
 		for (func in pre){
 			
 			# check filename is "functionname.done"
-			file_names <- paste0(faasr$InvocationID,"/",func,".done") 
-
+			file_names <- paste0(idfolder,"/",func,".done") 
+			check_fn_done<-s3$list_objects_v2(Bucket=log_server$Bucket, Prefix=file_names)
 			# if object exists, do nothing.
-			if (object_exists(file_names, log_server$Bucket)){
-				NULL
-			
-			# if object doesn't exist, leave a log that this function should wait and will be discarded
-			} else{
+			#if (object_exists(file_names, log_server$Bucket)){
+			#	NULL
+			#} else{
+			#	faasr_log(faasr, "error:function should wait")
+			#	stop()
+			#}
+			# if object doesn't exist, leave a log that this function should wait and will be discarded				  
+			if (length(check_fn_done$Contents)==0){
 				faasr_log(faasr, "error:function should wait")
 				stop()
 			}
@@ -440,27 +507,37 @@ faasr_check<-function(faasr, pre){
 		
 		# put random number into the file named "function.candidate"
 		random_number <- sample(1:10000, 1)
-
+		id_folder <- paste0("FaaSrLog/", faasr$InvocationID)
 		# Check whether directory exists, if not, create one.
-		if (!dir.exists(faasr$InvocationID)){dir.create(faasr$InvocationID)}
-		file_names <- paste0(faasr$InvocationID,"/",faasr$FunctionInvoke,".candidate")
+		if (!dir.exists(id_folder)){dir.create(id_folder, recursive=TRUE)}
+		file_names <- paste0(id_folder,"/",faasr$FunctionInvoke,".candidate")
 
 		# Below is to avoid the race condition
 		# acquire a Lock
 		faasr_acquire(faasr)
 		
 		# if file named "function.candidate" exists, save it to the local
-		if (object_exists(file_names, log_server$Bucket)){
-			save_object(file_names, file=file_names, bucket=log_server$Bucket)
+		#if (object_exists(file_names, log_server$Bucket)){
+		#	save_object(file_names, file=file_names, bucket=log_server$Bucket)
+		#}
+		check_fn_candidate<-s3$list_objects_v2(Bucket=log_server$Bucket, Prefix=file_names)
+		if (length(check_fn_candidate)!=0){
+			if (file.exists(file_names)){file.remove(file_names)}
+			s3$download_file(Key=file_names, Filename=file_names, Bucket=log_server$Bucket)
 		}
 		
 		# append random number to the file / put it back to the s3 bucket 
 		write.table(random_number, file_names, col.names=FALSE, row.names = FALSE, append=TRUE, quote=FALSE)
-		put_object(file=file_names, object=file_names, bucket=log_server$Bucket)
+		
+		#put_object(file=file_names, object=file_names, bucket=log_server$Bucket)
+		result<-s3$put_object(Body=file_names, Key=file_names, Bucket=log_server$Bucket)
+
 		
 		# save it to the local, again
-		save_object(file_names, file=file_names, bucket=log_server$Bucket)
-
+		#save_object(file_names, file=file_names, bucket=log_server$Bucket)
+		if (file.exists(file_names)){file.remove(file_names)}
+		s3$download_file(Key=file_names, Filename=file_names, Bucket=log_server$Bucket)
+		
 		# release the Lock
 		faasr_release(faasr)
 		
@@ -472,46 +549,63 @@ faasr_check<-function(faasr, pre){
 			stop()
 			}
 
+		}
 	}
 }
-
 
 
 # Read-Set Memory implementation
 faasr_rsm <- function(faasr){
 	# Set env for flag and lock
 	flag_content <- as.character(sample(1:1000,1))
-	flag_path <- paste0(faasr$InvocationID,"/",faasr$FunctionInvoke,"/flag/")
+	flag_path <- paste0("FaaSrLogs/", faasr$InvocationID,"/",faasr$FunctionInvoke,"/flag/")
 	flag_name <- paste0(flag_path,flag_content)
-	lock_name <- paste0(faasr$InvocationID,"/",faasr$FunctionInvoke,"./lock")
+	lock_name <- paste0("FaaSrLogs/", faasr$InvocationID,"/",faasr$FunctionInvoke,"./lock")
 
 	# Set env for the storage.
 	target_s3 <- faasr$LoggingServer
 	target_s3 <- faasr$DataStores[[target_s3]]
-	Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
-
+	#Sys.setenv("AWS_ACCESS_KEY_ID"=target_s3$AccessKey, "AWS_SECRET_ACCESS_KEY"=target_s3$SecretKey, "AWS_DEFAULT_REGION"=target_s3$Region, "AWS_SESSION_TOKEN" = "")
+ 	s3<-paws::s3(
+	  		config=list(
+		  		credentials=list(
+			  		creds=list(
+				  		access_key_id=target_s3$AccessKey,
+				  		secret_access_key=target_s3$SecretKey)),
+		  		region=target_s3$Region)
+	  	)
+	
 	# Make a loop
 	while(TRUE){
 		# Put a object named "functionname/flag" with the content "T" into the S3 bucket
-		put_object("T", flag_name, target_s3$Bucket)
-
+		#put_object("T", flag_name, target_s3$Bucket)
+		result<-s3$put_object(Key=flag_name, Bucket=target_s3$Bucket)
+		
 		# if someone has a flag i.e.,faasr_anyone_else_interested returns TRUE, delete_flag and try again.
 		if(faasr_anyone_else_interested(faasr, target_s3, flag_path, flag_name)){
-			delete_object(flag_name, target_s3$Bucket)
+			#delete_object(flag_name, target_s3$Bucket)
+			s3$delete_object(Key=flag_name, Bucket=target_s3$Bucket)
 
 		# if nobody has a flag i.e.,faasr_anyone_else_interested returns FALSE, check the lock condition.
 		}else{ 
-
+			
 			# if ".lock" exists in the bucket, return FALSE, and try all over again.
-			if (object_exists(lock_name, target_s3$Bucket)){
+			check_lock <- s3$list_objects_v2(Prefix=lock_name, Bucket=target_s3$Bucket)
+			if (length(check_lock$Contents)!=0){
 				return(FALSE)
+			#if (object_exists(lock_name, target_s3$Bucket)){
+			#	return(FALSE)
 
 			# if ".lock" does not exist, make a new lock with the content of flag_content
 			}else{
-				put_object(flag_content, lock_name, target_s3$Bucket)
-
+				#put_object(flag_content, lock_name, target_s3$Bucket)
+				writeLines(flag_content, "lock.txt")
+				result <- s3$put_object(Body="lock.txt", Key=lock_name, Bucket=target_s3$Bucket)
+				file.remove("lock.txt")
+				
 				# release the flag and get out of the while loop
-				delete_object(flag_name, target_s3$Bucket)
+				#delete_object(flag_name, target_s3$Bucket)
+				s3$delete_object(Key=flag_name, Bucket=target_s3$Bucket)
 				return(TRUE)	
 			}
 		}
@@ -528,7 +622,9 @@ faasr_anyone_else_interested <- function(faasr, target_s3, flag_path, flag_name)
 	# which the bucket object "Owner" part does not have "DisplayName", just have "ID" value.
 	# alternative package: may use "paws" library list_objects_v2 function
 	# pool is a list of flag names
-	pool <- get_bucket_df(target_s3$Bucket,prefix=flag_path)
+	#pool <- get_bucket_df(target_s3$Bucket,prefix=flag_path)
+	check_pool <- s3$list_objects_v2(Bucket=target_s3$Bucket, Prefix=flag_path)
+	pool <- lapply(check_pool$Contents, function(x) x$Key)
 	
 	# if this function sets the flag and it is the only flag, return FALSE, if not, return TRUE
 	if (flag_name %in% pool$Key && length(pool$Key)==1){
