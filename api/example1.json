@@ -1,0 +1,91 @@
+{
+"FunctionInvoke": "F1",
+"InvocationID": "000",
+"LoggingServer":"S3_A",
+"FunctionList":{
+        "F1":{
+                "FaaSServer":"github_a",
+                "Actionname":"spark0510/git_test1",
+                "Arguments":{
+                        "input1":"input1.csv",
+                        "input2":"input2.csv",
+                        "output":"output1.csv"
+                },
+                "InvokeNext":["F3","F2"]
+        },
+        "F2":{
+                "FaaSServer":"github_a",
+                "Actionname":"spark0510/git_test2",
+                "Arguments":{
+                        "input1":"input1.csv",
+                        "input2":"output1.csv",
+                        "output":"output2.csv"
+                },
+                "InvokeNext":["F4"]
+        },
+        "F3":{
+                "FaaSServer":"github_a",
+                "Actionname":"spark0510/git_test3",
+                "Arguments":{
+                        "input1":"input2.csv",
+                        "input2":"output1.csv",
+                        "output":"output3.csv"
+                },
+                "InvokeNext":["F4"]
+        },
+        "F4":{
+                "FaaSServer":"github_a",
+                "Actionname":"spark0510/git_test3",
+                "Arguments":{
+                        "input1":"output2.csv",
+                        "input2":"output3.csv",
+                        "output":"output4.csv"
+                }
+        }
+},
+"ComputeServers":{
+        "github_a":{
+                "FaaSType": "GitHubActions",
+                "UserName":"spark0510",
+                "RepoName":"git_test1",
+                "WorkflowName":"workflow.yml",
+                "Token":"",
+                "Ref":"main"
+        },
+        "lambda_a":{
+                "FaaSType": "Lambda",
+                "Region":"us-east-2",
+                "AccessKey":"GITHUB_lambda_ACCESS_KEY",
+                "SecretKey":"GITHUB_lambda_SECRET_KEY"
+        }
+},
+"DataStores":{
+        "S3_A":{
+                "Endpoint":"my_s3",
+                "Protocol":"https",
+                "AccessKey":"",
+                "SecretKey":"",
+                "Bucket":"spark7-bucket-01",
+                "Region":"us-east-1",
+                "Writable":"TRUE"
+        },
+        "S3_B":{
+            "Endpoint":"my_s3",
+            "Protocol":"https",
+            "AccessKey":"GITHUB_S3_ACCESS_KEY",
+            "SecretKey":"GITHUB_S3_SECRET_KEY",
+            "Bucket":"4662-east1",
+            "Region":"us-east-1",
+            "Writable":"TRUE"
+        }
+},        
+"ActionContainers":{
+        "faasr":"faasr/base-tidyverse-github"
+        },
+
+"FunctionGitRepo":{
+	"spark0510/git_test1":"https://github.com/spark0510/faasr_example.git",
+	"spark0510/git_test2":"https://github.com/spark0510/faasr_example.git",
+	"spark0510/git_test3":"https://github.com/spark0510/faasr_example.git"
+}
+}
